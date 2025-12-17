@@ -3,17 +3,28 @@ from colorama import Fore
 from dataclasses import dataclass
 import hashlib
 from pathlib import Path
+from pypdf import PdfReader
+import requests
+from requests.adapters import HTTPAdapter
 from tqdm import tqdm
 from typing import Sequence
+import urllib3
+from urllib3.util.retry import Retry
 import yaml
 
 from common import Conf
 
-import requests
-from requests.adapters import HTTPAdapter
-import urllib3
-from urllib3.exceptions import InsecureRequestWarning
-from urllib3.util.retry import Retry
+urllib3.disable_warnings()
+session = requests.Session()
+retry_strategy = Retry(
+    total=5,
+    backoff_factor=1,
+    status_forcelist=[429, 500, 502, 503, 504],
+    allowed_methods=["HEAD", "GET", "OPTIONS", "POST"]
+)
+adapter = HTTPAdapter(max_retries=retry_strategy)
+session.mount("https://", adapter)
+session.mount("http://", adapter)
 
 
 @dataclass
@@ -50,27 +61,20 @@ yaml_conf_file = Path(args.conf)
 with yaml_conf_file.open("r") as f:
     conf = Conf(**yaml.safe_load(f))
 
-urllib3.disable_warnings(InsecureRequestWarning)
-session = requests.Session()
-session.verify = False
-retry = Retry(connect=3, backoff_factor=0.5)
-adapter = HTTPAdapter(max_retries=retry)
-session.mount('http://', adapter)
-session.mount('https://', adapter)
-
 ####################################################################################################
 # PDF COLLECT
 ####################################################################################################
 
-x = Path(conf.PDF_FOLDER).rglob("*.pdf")
-x = [f for f in x if not is_hidden(f)]
+paths = Path(conf.PDF_FOLDER).rglob("*.pdf")
+paths = [f for f in paths if not is_hidden(f)]
 
-for pdf in tqdm(x, desc=Fore.GREEN + 'Processing PDF files'):
+for pdf in tqdm(paths, desc=Fore.GREEN + 'Processing PDF files'):
     md5 = md5_of(pdf)
+    reader = PdfReader(pdf)
     corpus[md5] = PDF(
         filename=pdf.stem,
         MD5=md5,
-        n_pages=0,
+        n_pages=len(reader.pages),
         path=pdf.parents
     )
 
@@ -93,7 +97,8 @@ for md5, item in tqdm(corpus.items(), desc=Fore.GREEN + 'Sending to Grist'):
                     },
                     "fields": {
                         "filename": item.filename,
-                        "MD5": item.MD5
+                        "MD5": item.MD5,
+                        "n_pages": str(item.n_pages)
                     }
                 }
             ]
