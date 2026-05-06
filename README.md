@@ -62,7 +62,7 @@ Exécution du script [2.1](./scripts/2.1.ts) qui va, pour chaque fichier PDF dan
 ```
 
 ```sh
-deno scripts/2.1.ts --repo /Users/amleth/repositories/sherlook-example-collection
+deno scripts/2.1.ts --repo /Users/iremus/Dev/sherlook-example-collection
 ```
 
 ##### `Un fichier png par page`
@@ -80,7 +80,7 @@ Exécution du script [2.2](2.2.sh).
 ```
 
 ```
-sh scripts/2.2.sh /Users/amleth/repositories/sherlook-example-collection
+sh scripts/2.2.sh /Users/iremus/Dev/sherlook-example-collection
 ```
 
 ##### `Texte OCRisé`
