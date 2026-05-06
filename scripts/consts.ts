@@ -1,0 +1,1 @@
+export const RAW_FOLDER_PATH = "/raw";
