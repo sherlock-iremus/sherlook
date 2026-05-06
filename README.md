@@ -31,11 +31,11 @@ Dans une table `collections` :
 
 Exécution du script [1](./scripts/1.ts), qui va nourrir la table `raw` :
 
-|               Collection               |       Nom       | UUID | MD5 | Pages | Nakala DOI |
-| :------------------------------------: | :-------------: | :--: | :-: | :---: | :--------: |
-| `df9ae56d-382a-4359-9a55-d668245b6e5e` | `pokedex-1.pdf` |      |     |       |            |
-| `df9ae56d-382a-4359-9a55-d668245b6e5e` | `pokedex-2.pdf` |      |     |       |            |
-| `df9ae56d-382a-4359-9a55-d668245b6e5e` | `pokedex-3.pdf` |      |     |       |            |
+|               Collection               |    filenames    | UUID | MD5 | Pages | E42 Nakala DOI |
+| :------------------------------------: | :-------------: | :--: | :-: | :---: | :------------: |
+| `df9ae56d-382a-4359-9a55-d668245b6e5e` | `pokedex-1.pdf` |      |     |       |                |
+| `df9ae56d-382a-4359-9a55-d668245b6e5e` | `pokedex-2.pdf` |      |     |       |                |
+| `df9ae56d-382a-4359-9a55-d668245b6e5e` | `pokedex-3.pdf` |      |     |       |                |
 
 ```sh
 bash scripts/1.sh 3317dbd4-e75b-42d2-8d43-dd3cd39634fe /Users/iremus/Dev/sherlook-example-collection
@@ -67,7 +67,7 @@ deno scripts/2.1.ts --repo /Users/iremus/Dev/sherlook-example-collection
 
 ##### `Un fichier png par page`
 
-Exécution du script [2.2](2.2.sh).
+Exécution du script [2.2.1](2.2.1.sh) qui génère un fichier PNG par page.
 
 ```
 /gen/pokedex-1-01.png
@@ -79,9 +79,17 @@ Exécution du script [2.2](2.2.sh).
 /gen/pokedex-3-51.png
 ```
 
-```
-sh scripts/2.2.sh /Users/iremus/Dev/sherlook-example-collection
-```
+Exécution du script [2.2.2](2.2.2.ts) qui recense les groupes d'images générées
+dans Grist (autant d'entrées que de fichiers dans `/raw`) :
+
+|               Collection               |  filenames  |                  UUID                  | E42 Nakala DOI |
+| :------------------------------------: | :---------: | :------------------------------------: | :------------: |
+| `df9ae56d-382a-4359-9a55-d668245b6e5e` | `pokedex-1` | `a8c6b81b-bac4-400b-a102-84d3850c4e80` |                |
+| `df9ae56d-382a-4359-9a55-d668245b6e5e` | `pokedex-2` | `dd50ef07-7052-4992-ac27-f5fc309dac92` |                |
+| `df9ae56d-382a-4359-9a55-d668245b6e5e` | `pokedex-3` | `0a3e0029-475d-4848-9a8d-591308a807d9` |                |
+
+Puis appeler un script 2.2.3 comme :
+[https://github.com/sherlock-iremus/sherlock-deno/blob/main/iremus-scripts/risset-grist-to-nakala.sh](https://github.com/sherlock-iremus/sherlock-deno/blob/main/iremus-scripts/risset-grist-to-nakala.sh).
 
 ##### `Texte OCRisé`
 
