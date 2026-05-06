@@ -111,14 +111,6 @@ Puis appeler un script 2.2.3 comme :
 sh scripts/2.3.?
 ```
 
-#### `🟣 Déclaration des fichiers dérivés dans Grist`
-
-Exécution du script [3](./scripts/3.ts).
-
-```sh
-deno scripts/3.ts --repo /Users/amleth/repositories/sherlook-example-collection
-```
-
 #### `🟣 Création de la structure sémantique de la collection`
 
 ### `Phase 2️⃣ : extraction de nouvelles connaissances`
