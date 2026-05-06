@@ -31,11 +31,11 @@ Dans une table `collections` :
 
 Exécution du script [1](./scripts/1.ts), qui va nourrir la table `raw` :
 
-|               Collection               |       Nom       | UUID | MD5 | Pages | Nakala DOI |
-| :------------------------------------: | :-------------: | :--: | :-: | :---: | :--------: |
-| `df9ae56d-382a-4359-9a55-d668245b6e5e` | `pokedex-1.pdf` |      |     |       |            |
-| `df9ae56d-382a-4359-9a55-d668245b6e5e` | `pokedex-2.pdf` |      |     |       |            |
-| `df9ae56d-382a-4359-9a55-d668245b6e5e` | `pokedex-3.pdf` |      |     |       |            |
+|               Collection               |       Nom       | UUID | MD5 | Pages | PDF Nakala DOI | PNG Nakala DOI |
+| :------------------------------------: | :-------------: | :--: | :-: | :---: | :------------: | :------------: |
+| `df9ae56d-382a-4359-9a55-d668245b6e5e` | `pokedex-1.pdf` |      |     |       |                |                |
+| `df9ae56d-382a-4359-9a55-d668245b6e5e` | `pokedex-2.pdf` |      |     |       |                |                |
+| `df9ae56d-382a-4359-9a55-d668245b6e5e` | `pokedex-3.pdf` |      |     |       |                |                |
 
 ```sh
 bash scripts/1.sh 3317dbd4-e75b-42d2-8d43-dd3cd39634fe /Users/iremus/Dev/sherlook-example-collection
