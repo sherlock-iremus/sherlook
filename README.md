@@ -15,9 +15,9 @@ répertoire (qui ne doit donc contenir aucun sous-dossier. Le chercheur a pour
 responsabilité de nommer ses fichiers de sorte que leur ordre au sein de ce
 dossier soit signifiant. Ces fichiers doivent être rassemblés dans un dossier
 `/raw` à la racine du dépôt. Par exemple, pour
-[cette collection](https://src.koda.cnrs.fr/thomas.bottini.1/sherlook-example-collection),
+[cette collection](https://github.com/sherlock-iremus/sherlook-example-collection),
 les fichiers soumis par le chercheur sont rassemblés dans
-[ce dossier](https://src.koda.cnrs.fr/thomas.bottini.1/sherlook-example-collection/-/tree/main/raw?ref_type=heads).
+[ce dossier](https://github.com/sherlock-iremus/sherlook-example-collection/tree/main/raw).
 
 #### `🟣 Déclaration de la collection dans Grist`
 
@@ -25,7 +25,7 @@ Dans une table `collections` :
 
 |                  UUID                  |   Nom   |                                  URL                                  |
 | :------------------------------------: | :-----: | :-------------------------------------------------------------------: |
-| `df9ae56d-382a-4359-9a55-d668245b6e5e` | Pokédex | https://src.koda.cnrs.fr/thomas.bottini.1/sherlook-example-collection |
+| `df9ae56d-382a-4359-9a55-d668245b6e5e` | Pokédex | https://github.com/sherlock-iremus/sherlook-example-collection |
 
 #### `🟣 Déclaration du contenu de la collection dans Grist`
 
@@ -44,7 +44,7 @@ bash scripts/1.sh 3317dbd4-e75b-42d2-8d43-dd3cd39634fe /Users/iremus/Dev/sherloo
 #### `🟣 Génération des fichiers dérivés`
 
 Tous les fichiers dérivés sont créés dans un dossier `/gen`
-([par exemple](https://src.koda.cnrs.fr/thomas.bottini.1/sherlook-example-collection/-/tree/main/gen?ref_type=heads)).
+([par exemple](https://github.com/sherlock-iremus/sherlook-example-collection/-/tree/main/gen?ref_type=heads)).
 
 ##### `Un fichier PDF par page`
 
