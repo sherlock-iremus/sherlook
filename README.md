@@ -44,7 +44,7 @@ bash scripts/1.sh 3317dbd4-e75b-42d2-8d43-dd3cd39634fe /Users/iremus/Dev/sherloo
 #### `🟣 Génération des fichiers dérivés`
 
 Tous les fichiers dérivés sont créés dans un dossier `/gen`
-([par exemple](https://github.com/sherlock-iremus/sherlook-example-collection/-/tree/main/gen?ref_type=heads)).
+([par exemple](https://github.com/sherlock-iremus/sherlook-example-collection/tree/main/gen)).
 
 ##### `Un fichier PDF par page`
 
