@@ -88,9 +88,6 @@ dans Grist (autant d'entrées que de fichiers dans `/raw`) :
 | `df9ae56d-382a-4359-9a55-d668245b6e5e` | `pokedex-2` | `dd50ef07-7052-4992-ac27-f5fc309dac92` |                |
 | `df9ae56d-382a-4359-9a55-d668245b6e5e` | `pokedex-3` | `0a3e0029-475d-4848-9a8d-591308a807d9` |                |
 
-Puis appeler un script 2.2.3 comme :
-[https://github.com/sherlock-iremus/sherlock-deno/blob/main/iremus-scripts/risset-grist-to-nakala.sh](https://github.com/sherlock-iremus/sherlock-deno/blob/main/iremus-scripts/risset-grist-to-nakala.sh).
-
 ##### `Texte OCRisé`
 
 ```
