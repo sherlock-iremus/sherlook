@@ -11,12 +11,12 @@ const { options } = await new Command()
     .name("SHERLOOK Grist Collection Declaration")
     .description("Déclare le contenu d'une collection dans Grist à partir des fichiers PDF bruts.")
     .version("v1.0.0")
-    .option("--grist-api-key <grist-api-key:string>")
-    .option("--grist-base <grist-base:string>")
-    .option("--grist-doc-id <grist-doc-id:string>")
-    .option("--grist-raw-table-id <grist-raw-table-id:string>")
-    .option("--grist-collection-table-id <grist-collection-table-id:string>")
-    .option("--collection-uuid <collection-uuid:string>")
+    .option("--grist-api-key <grist-api-key:string>", "")
+    .option("--grist-base <grist-base:string>", "")
+    .option("--grist-doc-id <grist-doc-id:string>", "")
+    .option("--grist-files-table-id <grist-files-table-id:string>", "")
+    .option("--grist-collection-table-id <grist-collection-table-id:string>", "")
+    .option("--collection-uuid <collection-uuid:string>", "")
     .option("--repo <raw-dir:string>", "Chemin du repository de la collection")
     .parse();
 
@@ -32,7 +32,7 @@ const rawRecords: RawRecord[] = await fetchGristRecords(
     options.gristBase,
     options.gristApiKey,
     options.gristDocId,
-    options.gristRawTableId
+    options.gristFilesTableId
 );
 
 console.log("Fetching collections definitions from Grist... ⏳");
@@ -46,7 +46,7 @@ const collectionRecords: CollectionRecord[] = await fetchGristRecords(
 const existingCollectionId = collectionRecords.find(r => r.fields.UUID === collectionUuid)?.id;
 if (!existingCollectionId) {
     console.error(``);
-    throw console.error(`No existing collection found in Grist with UUID ${collectionUuid}. A new collection will be created. Please create the collection in Grist first and re-run the script.`);
+    throw console.error(`No existing collection found in Grist with UUID ${collectionUuid}. Please create the collection in Grist first and re-run the script.`);
 }
 
 const existingMd5s = new Set((rawRecords || []).map(r => r.fields && r.fields.MD5));
@@ -66,10 +66,11 @@ for (let i = 0; i < files.length; i++) {
     const pages = await getNumberOfPages(file, fileName, ext);
     records.push({
         Collection: existingCollectionId,
-        Nom: basename,
+        Dir: "raw",
+        Name: basename,
+        Extension: ext || null,
         MD5: md5,
         Pages: pages,
-        Type: ext || null
     });
 }
 console.log("File analysis complete ✅");
@@ -79,7 +80,7 @@ records.length && await addRecords(
     options.gristBase,
     options.gristApiKey,
     options.gristDocId,
-    options.gristRawTableId,
+    options.gristFilesTableId,
     {records: records.map(r => ({ fields: r }))}
 );
 console.log("Records pushed ✅");

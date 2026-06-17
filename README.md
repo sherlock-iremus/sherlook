@@ -29,13 +29,13 @@ Dans une table `collections` :
 
 #### `🟣 Déclaration du contenu de la collection dans Grist`
 
-Exécution du script [1](./scripts/1.ts), qui va nourrir la table `raw` :
+Exécution du script [1](./scripts/1.ts), qui va nourrir la table `files` :
 
-|               Collection               |    filenames    | UUID | MD5 | Pages | E42 Nakala DOI |
-| :------------------------------------: | :-------------: | :--: | :-: | :---: | :------------: |
-| `df9ae56d-382a-4359-9a55-d668245b6e5e` | `pokedex-1.pdf` |      |     |       |                |
-| `df9ae56d-382a-4359-9a55-d668245b6e5e` | `pokedex-2.pdf` |      |     |       |                |
-| `df9ae56d-382a-4359-9a55-d668245b6e5e` | `pokedex-3.pdf` |      |     |       |                |
+|               Collection               |  Dir |  name | extension    | UUID | MD5 | Pages | E42 Nakala DOI |
+| :------------------------------------: | :-------------: | :--: | :--: | :--: | :-: | :---: | :------------: |
+| `df9ae56d-382a-4359-9a55-d668245b6e5e` | `raw` | `pokedex-1` | `pdf`     |     |       |                |
+| `df9ae56d-382a-4359-9a55-d668245b6e5e` | `raw` |`pokedex-2` | `pdf`    |     |       |                |
+| `df9ae56d-382a-4359-9a55-d668245b6e5e` | `raw` |`pokedex-3` |  `pdf`    |     |       |                |
 
 ```sh
 bash scripts/1.sh 3317dbd4-e75b-42d2-8d43-dd3cd39634fe /Users/iremus/Dev/sherlook-example-collection
@@ -68,6 +68,10 @@ deno scripts/2.1.ts --repo /Users/iremus/Dev/sherlook-example-collection
 ##### `Un fichier png par page`
 
 Exécution du script [2.2.1](2.2.1.sh) qui génère un fichier PNG par page.
+
+```sh
+sh scripts/2.2.1.sh /Users/iremus/Dev/sherlook-example-collection
+```
 
 ```
 /gen/pokedex-1-01.png
