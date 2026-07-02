@@ -1,0 +1,111 @@
+{
+    "object": "list",
+    "data": [
+        {
+            "object": "model",
+            "id": "openai/gpt-oss-120b",
+            "type": "text-generation",
+            "aliases": [
+                "openweight-large"
+            ],
+            "created": 1765375160,
+            "owned_by": "Services du premier ministre - DINUM",
+            "max_context_length": 131072,
+            "costs": {
+                "prompt_tokens": 0.0,
+                "completion_tokens": 0.0
+            }
+        },
+        {
+            "object": "model",
+            "id": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+            "type": "text-generation",
+            "aliases": [
+                "openweight-code"
+            ],
+            "created": 1765384283,
+            "owned_by": "Services du premier ministre - DINUM",
+            "max_context_length": 262144,
+            "costs": {
+                "prompt_tokens": 0.0,
+                "completion_tokens": 0.0
+            }
+        },
+        {
+            "object": "model",
+            "id": "mistralai/Ministral-3-8B-Instruct-2512",
+            "type": "image-text-to-text",
+            "aliases": [
+                "openweight-small"
+            ],
+            "created": 1765384336,
+            "owned_by": "Services du premier ministre - DINUM",
+            "max_context_length": 262144,
+            "costs": {
+                "prompt_tokens": 0.0,
+                "completion_tokens": 0.0
+            }
+        },
+        {
+            "object": "model",
+            "id": "BAAI/bge-m3",
+            "type": "text-embeddings-inference",
+            "aliases": [
+                "openweight-embeddings"
+            ],
+            "created": 1765384417,
+            "owned_by": "Services du premier ministre - DINUM",
+            "max_context_length": 8192,
+            "costs": {
+                "prompt_tokens": 0.0,
+                "completion_tokens": 0.0
+            }
+        },
+        {
+            "object": "model",
+            "id": "BAAI/bge-reranker-v2-m3",
+            "type": "text-classification",
+            "aliases": [
+                "openweight-rerank"
+            ],
+            "created": 1765384523,
+            "owned_by": "Services du premier ministre - DINUM",
+            "max_context_length": 8192,
+            "costs": {
+                "prompt_tokens": 0.0,
+                "completion_tokens": 0.0
+            }
+        },
+        {
+            "object": "model",
+            "id": "mistralai/Mistral-Small-3.2-24B-Instruct-2506",
+            "type": "image-text-to-text",
+            "aliases": [
+                "openweight-medium",
+                "albert-large"
+            ],
+            "created": 1765979887,
+            "owned_by": "Services du premier ministre - DINUM",
+            "max_context_length": 128000,
+            "costs": {
+                "prompt_tokens": 0.0,
+                "completion_tokens": 0.0
+            }
+        },
+        {
+            "object": "model",
+            "id": "openai/whisper-large-v3",
+            "type": "automatic-speech-recognition",
+            "aliases": [
+                "openweight-audio"
+            ],
+            "created": 1778071574,
+            "owned_by": "Services du premier ministre - DINUM",
+            "max_context_length": null,
+            "costs": {
+                "prompt_tokens": 0.0,
+                "completion_tokens": 0.0
+            }
+        }
+    ]
+}

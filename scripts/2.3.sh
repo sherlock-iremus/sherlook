@@ -20,8 +20,8 @@ else
     RUN_NAME_ARG=()
 fi
 
-deno --allow-env --allow-net --allow-read --unsafely-ignore-certificate-errors \
-        "$SCRIPT_DIR/1.ts" \
+deno --allow-env --allow-net --allow-read --allow-write --unsafely-ignore-certificate-errors \
+        "$SCRIPT_DIR/2.3.ts" \
         --grist-api-key "$GRIST_API_KEY" \
         --grist-base https://musicodb.sorbonne-universite.fr/api \
         --grist-doc-id t7bE5Ztv7UXC \

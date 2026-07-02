@@ -1,0 +1,90 @@
+{
+     id: "request-196763c9eea349718a3b67737a32d50a",
+  object: "chat.completion",
+  created: 1782295246,
+  model: "mistralai/Mistral-Small-3.2-24B-Instruct-2506",
+  choices: [
+        {
+      index: 0,
+      message: {
+        role: "assistant",
+        content: "```\n" +
+          "numéro du pokemon,nom du pokemon,path du fichier dans lequel tu as trouvé ce pokemon,height,weight,type,description\n" +
+          `104,Cubone,Document 1,
+                1' 4",14 lbs.,Lonely,Because it never removes its skull helmet, no one has ever seen this Pokémon’s real face.\n` +
+          `150,Mewtwo,Document 1,
+                6' 7",269 lbs.,Genetic,It was created by a scientist after years of horrific gene splicing and DNA engineering experiments.\n` +"```",
+        refusal: null,
+        annotations: null,
+        audio: null,
+        function_call: null,
+        tool_calls: [],
+        reasoning: null
+            },
+      logprobs: null,
+      finish_reason: "stop",
+      stop_reason: null,
+      token_ids: null
+        }
+    ],
+  service_tier: null,
+  system_fingerprint: null,
+  usage: {
+    prompt_tokens: 512,
+    completion_tokens: 105,
+    total_tokens: 617,
+    cost: 0,
+    carbon: {
+      kWh: { min: 0.000037705312324481015, max: 0.000037705312324481015
+            },
+      kgCO2eq: { min: 0.0000018920782394804773, max: 0.0000018920782394804773
+            }
+        },
+    impacts: { kWh: 0.000037705312324481015, kgCO2eq: 0.0000018920782394804773
+        },
+    requests: 2
+    },
+  prompt_logprobs: null,
+  prompt_token_ids: null,
+  kv_transfer_params: null,
+  search_results: [
+        {
+      method: "hybrid",
+      score: 0.01639344262295082,
+      chunk: {
+        object: "chunk",
+        id: 0,
+        collection_id: 237718,
+        document_id: 4630987,
+        content: "104  #104 : CUBONE\n" +
+          "104  #104 : Cubone\n" +
+          "Because it never removes its skull helmet, no one has\n" +
+          "ever seen this Pokémon’s real face.\n" +
+          "•Pokémon:Lonely.\n" +
+          '•Height: 1’ 4".\n' +"•Weight: 14 lbs.\n" +"Figure 104:Cubone(Pokémon number 104).\n" +
+          "104",
+        metadata: null,
+        created: 1782220543
+            }
+        },
+        {
+      method: "hybrid",
+      score: 0.01639344262295082,
+      chunk: {
+        object: "chunk",
+        id: 0,
+        collection_id: 237718,
+        document_id: 4631038,
+        content: "150  #150 : MEWTWO\n" +
+          "150  #150 : Mewtwo\n" +
+          "It was created by a scientist after years of horrific\n" +
+          "gene splicing and DNA engineering experiments.\n" +
+          "•Pokémon:Genetic.\n" +
+          '•Height: 6’ 7".\n' +"•Weight: 269 lbs.\n" +"Figure 150:Mewtwo(Pokémon number 150).\n" +
+          "150",
+        metadata: null,
+        created: 1782220556
+            }
+        }
+    ]
+}

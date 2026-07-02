@@ -1,14 +1,10 @@
 import { Command } from 'jsr:@cliffy/command@1.0.0';
-import { PDFDocument } from "https://esm.sh/pdf-lib";
-import { walk } from "jsr:@std/fs@0.224.0";
-import { join, basename, extname } from "jsr:@std/path@0.224.0";
-import { RAW_FOLDER_PATH, GEN_FOLDER_PATH } from './consts.ts';
 import { addFileRecordsToGrist, addRunRecordToGrist, getMD5FromFile } from './utils.ts';
 import { fetchRecords as fetchGristRecords } from "https://raw.githubusercontent.com/sherlock-iremus/sherlock-deno/refs/heads/main/common-grist.ts";
 
 const { options } = await new Command()
-  .name("SHERLOOK Split PDFs")
-  .description("Découpe les PDF en pages uniques, recense les fichiers générés dans /gen et enregistre un run dans Grist.")
+  .name("SHERLOOK Convert PDFs to Images")
+  .description("Crée des registres Grist pour les images PNG générées à partir des PDF.")
   .version('v1.0.0')
   .option('--repo <repo:string>', "")
   .option("--collection-uuid <collection-uuid:string>", "")
@@ -19,12 +15,13 @@ const { options } = await new Command()
   .option("--grist-run-table-id <grist-run-table-id:string>", "")
   .option("--grist-collection-table-id <grist-collection-table-id:string>", "")
   .option("--run-name <run-name:string>", "Optional run name to override generated name")
+  .option("--input-file <input-file:string>", "input PDF file path", {collect: true})
+  .option("--output-file <output-file:string>", "output PNG file path", {collect: true})
   .parse();
 
-const TOOL_NAME = "PDF Split";
-const { repo, collectionUuid } = options;
+const TOOL_NAME = "PDF to PNG";
+const { collectionUuid } = options;
 
-// TODO: Delete previously generated entries in Grist, because this script is determinist.
 console.log("Fetching collections definitions from Grist... ⏳");
 const collectionRecords: CollectionRecord[] = await fetchGristRecords(
   options.gristBase,
@@ -39,6 +36,7 @@ if (!existingCollectionId) {
   throw console.error(`No existing collection found in Grist with UUID ${collectionUuid}. Please create the collection in Grist first and re-run the script.`);
 }
 
+// Fetch Files table to lookup generated PNG MD5s
 console.log("Fetching Files table records from Grist... ⏳");
 const fileRecords: RawRecord[] = await fetchGristRecords(
   options.gristBase,
@@ -47,41 +45,33 @@ const fileRecords: RawRecord[] = await fetchGristRecords(
   options.gristFilesTableId
 );
 
-const rawMd5Set = new Set<string>();
-const generatedFiles: any[] = [];
+// Compute MD5s for input PDF files and collect matching Grist IDs
+const inputPdfMd5Set = new Set<string>();
+const inputFilePaths = (options.inputFile || []) as string[];
 
-for await (const entry of walk(repo + RAW_FOLDER_PATH, { maxDepth: 1 })) {
-  if (!entry.isFile) continue;
-  if (extname(entry.path).toLowerCase() !== ".pdf") continue;
-
-  const inputBytes = await Deno.readFile(entry.path);
-  const inputPdf = await PDFDocument.load(inputBytes);
-  const pageCount = inputPdf.getPageCount();
-  const base = basename(entry.path, ".pdf");
-  rawMd5Set.add(await getMD5FromFile(entry.path));
-
-  for (let i = 0; i < pageCount; i++) {
-    const newPdf = await PDFDocument.create();
-    const [page] = await newPdf.copyPages(inputPdf, [i]);
-    newPdf.addPage(page);
-    const pdfBytes = await newPdf.save();
-    const outName = `${base}-${String(i + 1).padStart(String(pageCount).length, "0")}.pdf`;
-    const outPath = join(repo, GEN_FOLDER_PATH, outName);
-    await Deno.writeFile(outPath, pdfBytes);
-    console.log(`Wrote ${outName}`);
-    generatedFiles.push(outPath);
+for (const filePath of inputFilePaths) {
+  try {
+    const md5 = await getMD5FromFile(filePath);
+    inputPdfMd5Set.add(md5);
+  } catch (e) {
+    console.warn(`Could not hash file ${filePath}: ${e}`);
   }
 }
 
-const rawFilesGristIds: number[] = (fileRecords || [])
-  .filter(r => r.fields && rawMd5Set.has(r.fields.MD5))
+const inputPdfGristIds: number[] = (fileRecords || [])
+  .filter(r => r.fields && inputPdfMd5Set.has(r.fields.MD5))
   .map(r => r.id);
 
-const runRecordId = await addRunRecordToGrist(options, existingCollectionId, TOOL_NAME, options.runName, rawFilesGristIds);
+const runRecordId = await addRunRecordToGrist(options, existingCollectionId, TOOL_NAME, options.runName, inputPdfGristIds);
 if (!runRecordId) {
   console.error("Could not log run in Grist. Exiting.");
   Deno.exit(1);
 }
 console.log(`Run record created in Grist with ID: ${runRecordId}`);
 
-addFileRecordsToGrist(options, existingCollectionId, runRecordId, "gen", generatedFiles)
+// Prepare output PNG files for recording
+const outputFilePaths = (options.outputFile || []) as string[];
+
+console.log(`Recording ${outputFilePaths.length} PNG file(s) to Grist...`);
+addFileRecordsToGrist(options, existingCollectionId, runRecordId, "gen", outputFilePaths)
+console.log("PNG records pushed ✅");
