@@ -2,7 +2,7 @@ import { Command } from 'jsr:@cliffy/command@1.0.0';
 import { walk } from 'jsr:@std/fs@0.224.0';
 import { join, basename } from 'jsr:@std/path@0.224.0';
 import { fetchRecords as fetchGristRecords } from "https://raw.githubusercontent.com/sherlock-iremus/sherlock-deno/refs/heads/main/common-grist.ts";
-import { addRunRecordToGrist, addFileRecordsToGrist, getMD5FromFile, getRunName, getMimeTypeByPath } from './utils.ts';
+import { addRunRecordToGrist, getMD5FromFile, getRunName, getMimeTypeByPath } from './utils.ts';
 
 const { options } = await new Command()
   .name('SHERLOOK 3.1.1')

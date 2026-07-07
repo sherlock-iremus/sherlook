@@ -128,7 +128,10 @@ Exécution du script [2.4](2.4.sh) qui OCRise le PNG en prenant en argument l'ou
 Exécution du script [3.1](3.1.sh), qui, à partir des fichiers dérivés (texte/image/pdf), et d'un prompt explicite sur la nature de la structure des documents, génèrera un CSV à importer dans Grist.
 
 
-### `Phase 2️⃣ : extraction de nouvelles connaissances`
+### `🟣 Extraction de nouvelles connaissances`
+
+Éxécution du script [4.1](4.1.sh).
+
 
 ### `Phase 3️⃣ : publication`
 
@@ -156,18 +159,7 @@ TODO:
 - créer une fonction générique "getInputFiles" qui prend en paramètre des conditions (liste d'extensions, nombres de pages, dossier) et qui retourne les entrées grist couplés au fichier sur le disque
 - création de la structure : push grist ou fichier CSV importable ?
 - factoriser accès au .env
-
-lors de l'interrogation du LLM, il n'a pas accès au nom du fichier ni ses métadonnées, donc impossible de savoir. 2 solutions :
-    - interroger le LLM page par page (et du coup créer une collection pour chaque...) 
-    - modifier le pdf/image/txt pour y intégrer la référence et demander au LLM de noter cette référence dans le CSV.
-
-solution 1.
-=> 3.1.2 -> argument runId -> retrouver les .json -> pour chaque json retrouver le fichier source grâce à la nomenclature et appeler Albert. 
-générer le CSV avec une colonne qui identifie le fichier source
-
-
-
-Le problème de faire tourner les runs sur plusieurs fichiers à la fois, c'est qu'on perd le lien fichier source->fichier résultat. au niveau du CRM ça va poser problème.
-
+- gérer csv >150 lignes (100 résultats max ??, soit créer n-collections, soit voir si le LLM arrive à paginer) => peut être sortir de l'endpoint chat-completions avec outil search. => en fait on peut même abandonner la création de collection. Sauf si on compte poser directmeent des questions analytiques avec les txt source.
+- 
 
 quand passage sur koechlin, utiliser plutôt l'OCR en fichiers sources.
