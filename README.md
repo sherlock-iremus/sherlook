@@ -171,6 +171,3 @@ Le problème de faire tourner les runs sur plusieurs fichiers à la fois, c'est 
 
 
 quand passage sur koechlin, utiliser plutôt l'OCR en fichiers sources.
-
-- écrire message forum
-- envoyer une liste de scripts bash à Thomas pour qu'il fasse ses expériences

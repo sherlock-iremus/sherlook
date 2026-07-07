@@ -1,24 +1,25 @@
 import { Command } from 'jsr:@cliffy/command@1.0.0';
 import { join, basename } from 'jsr:@std/path@0.224.0';
 import { getRunName } from './utils.ts';
+import { stringify } from "@std/csv";
 
 const { options } = await new Command()
-    .name('SHERLOOK 3.1')
-    .description('Iterate files matching input regex under repo and print matches')
-    .option('--repo <repo:string>', '')
-    .option('--collection-uuid <collection-uuid:string>', '')
-    .option('--grist-api-key <grist-api-key:string>', '')
-    .option('--grist-base <grist-base:string>', '')
-    .option('--grist-doc-id <grist-doc-id:string>', '')
-    .option('--grist-files-table-id <grist-files-table-id:string>', '')
-    .option('--grist-run-table-id <grist-run-table-id:string>', '')
-    .option('--grist-collection-table-id <grist-collection-table-id:string>', '')
-    .option('--run-name <run-name:string>', '')
-    .option('--prompt <prompt:string>', '')
-    .option('--albert-base <albert-base:string>', '')
-    .option('--albert-api-key <albert-api-key:string>', '')
-    .option('--albert-collection-id <albert-collection-id:string>', '')
-    .parse();
+  .name('SHERLOOK 3.1')
+  .description('Iterate files matching input regex under repo and print matches')
+  .option('--repo <repo:string>', '')
+  .option('--collection-uuid <collection-uuid:string>', '')
+  .option('--grist-api-key <grist-api-key:string>', '')
+  .option('--grist-base <grist-base:string>', '')
+  .option('--grist-doc-id <grist-doc-id:string>', '')
+  .option('--grist-files-table-id <grist-files-table-id:string>', '')
+  .option('--grist-run-table-id <grist-run-table-id:string>', '')
+  .option('--grist-collection-table-id <grist-collection-table-id:string>', '')
+  .option('--run-name <run-name:string>', '')
+  .option('--prompt <prompt:string>', '')
+  .option('--albert-base <albert-base:string>', '')
+  .option('--albert-api-key <albert-api-key:string>', '')
+  .option('--albert-collection-id <albert-collection-id:string>', '')
+  .parse();
 
 const { repo, prompt, albertCollectionId } = options;
 const { albertBase, albertApiKey } = options;
@@ -38,11 +39,52 @@ const res = await fetch(
         {
           role: "system",
           content:
-            `Tu extrais des informations des documents et tu retournes UNIQUEMENT un CSV avec les colonnes spécifiées, pas de texte juste un CSV. Rajoute une colonne supplémentaire nommée source et contient l'identifiant du chunk du document. Si tu ne trouves pas d'information pour cette colonne, essaie de trouver quoique ce soit qui soit relevant pour toi`
+          /* csv */
+          /*
+            `Tu retournes exclusivement le contenu CSV brut.
+            N'ajoute jamais de balises Markdown, de triple backquotes, de préfixe "csv", d'explication ou de commentaire.
+            La première ligne doit être l'en-tête CSV.
+            - Toutes les valeurs doivent être entourées de guillemets doubles.
+            - Les guillemets présents dans les données doivent être échappés en les doublant (" -> "").
+            Rajoute une colonne supplémentaire nommée source_file (dans le texte: "source file: <nom du fichier>") qui correspond au fichier dans lequel se trouve information que tu as relevée.
+            Si tu ne trouves pas d'information pour cette colonne, ne renseigne surtout rien.`
+          */ 
+          /* json */ `
+           Tu extrais les informations du document et tu retournes UNIQUEMENT un tableau JSON valide.
+
+Règles obligatoires :
+
+* La réponse doit être un JSON valide parsable par un parser JSON standard.
+* Ne retourne aucun texte avant ou après le JSON.
+* Ne retourne jamais de Markdown.
+* Ne retourne jamais de triple backquotes.
+* Ne retourne jamais de préfixe "json".
+* Ne retourne jamais d'explication, de commentaire ou de note.
+* La racine du document doit être un tableau JSON.
+* Chaque élément du tableau doit être un objet JSON.
+* La première ligne de ta réponse doit donc être un '[' et la dernière ligne doit être un ']'.
+* Ajoute la clé suivante :
+* 
+Pour chaque élément extrait, utilise le source_file du document dans lequel l'information apparaît.
+Ne déduis jamais le source_file à partir d'un autre document.
+
+Si tu ne trouves pas d'information pour cette clé, ne renseigne surtout rien.
+
+Contraintes :
+
+* Conserve les valeurs exactement telles qu'elles apparaissent dans le document.
+* Ne modifie pas les unités.
+* Ne reformule pas les descriptions.
+* Ne traduis aucun texte.
+* Si une valeur est absente, utilise null.
+* Respecte l'encodage UTF-8.
+* Les chaînes doivent être correctement échappées selon la spécification JSON.
+`
+
         },
         {
           role: "user",
-          content: "tu trouves quoi sur ces documents ?"//prompt
+          content: prompt
         }
       ],
       tools: [
@@ -50,7 +92,7 @@ const res = await fetch(
           type: "search",
           collection_ids: [albertCollectionId],
           method: "hybrid",
-          limit: 2
+          limit: 5
         }
       ],
       tool_choice: "auto"
@@ -60,9 +102,10 @@ const res = await fetch(
 
 const data = await res.json();
 
-console.log(data);
 const outDir = join(repo, '/dat', getRunName(options.runName, tool));
 try { await Deno.mkdir(outDir, { recursive: true }); } catch (_) { }
-const outPath = join(outDir, 'albert-extract-structure-response.csv');
-await Deno.writeTextFile(outPath, data.choices[0].message.content);
-console.log(`Saved Albert extract structure response to ${outPath}`);
+const response = data.choices[0].message.content;
+await Deno.writeTextFile(join(outDir, 'structure.txt'), response);
+await Deno.writeTextFile(join(outDir, 'structure.json'), JSON.stringify(JSON.parse(response), null, 2));
+await Deno.writeTextFile(join(outDir, 'structure.csv'), stringify(JSON.parse(response), { header: true, columns: Object.keys(JSON.parse(response)[0] || {}) }));
+console.log(`Saved Albert extract structure response to ${outDir}/structure.txt, structure.json, and structure.csv`);

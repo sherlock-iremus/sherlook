@@ -2,7 +2,7 @@ import { Command } from 'jsr:@cliffy/command@1.0.0';
 import { walk } from 'jsr:@std/fs@0.224.0';
 import { join, basename } from 'jsr:@std/path@0.224.0';
 import { fetchRecords as fetchGristRecords } from "https://raw.githubusercontent.com/sherlock-iremus/sherlock-deno/refs/heads/main/common-grist.ts";
-import { addRunRecordToGrist, addFileRecordsToGrist, getMD5FromFile, getDefaultRunName, getRunName, getMimeTypeByPath } from './utils.ts';
+import { addRunRecordToGrist, addFileRecordsToGrist, getMD5FromFile, getRunName, getMimeTypeByPath } from './utils.ts';
 
 const { options } = await new Command()
   .name('SHERLOOK 3.1.1')
@@ -31,7 +31,7 @@ if (inputRegex) {
   } catch (e) {
     console.error('Invalid input-regex:', e.message || e);
     Deno.exit(1);
-  }
+  } 
 }
 
 
@@ -109,16 +109,9 @@ if (!albertCollectionId) {
   Deno.exit(1);
 }
 
-const outDir = join(repo, '/gen', runName);
-try { await Deno.mkdir(outDir, { recursive: true }); } catch (_) { }
-const outPath = join(outDir, 'albert-collection-creation-response.json');
-await Deno.writeTextFile(outPath, JSON.stringify(albertResp, null, 2));
-console.log(`Saved Albert collection response to ${outPath}`);
-
 console.log(`Pushing files to collection '${runName}' in Albert...`);
 
 // Upload each matched file as a separate document under the created collection
-const uploadResults: any[] = [];
 for (const p of matches) {
   try {
     const bytes = await Deno.readFile(p);
@@ -142,18 +135,11 @@ for (const p of matches) {
       continue;
     }
     const j = await r.json();
-    uploadResults.push({ file: p, response: j });
     console.log('Uploaded', p, '->', j);
   } catch (e) {
     console.error('Upload failed for', p, e);
   }
 }
-
-// Save combined response (collection creation + uploads) to outPath named by collection id
-const combined = { collection: albertResp, uploads: uploadResults };
-const outPathNamed = join(outDir, `${albertCollectionId}.json`);
-await Deno.writeTextFile(outPathNamed, JSON.stringify(combined, null, 2));
-console.log(`Saved Albert combined response to ${outPathNamed}`);
 
 // Create a Grist run record linking input files (those matched in Grist) and then record the output file
 const collectionRecords: CollectionRecord[] = await fetchGristRecords(
@@ -168,10 +154,8 @@ if (!existingCollectionId) {
   Deno.exit(1);
 }
 
-const runRecordId = await addRunRecordToGrist(options, existingCollectionId, tool, options.runName, inputGristIds);
+const runRecordId = await addRunRecordToGrist(options, existingCollectionId, tool, options.runName, inputGristIds, JSON.stringify(albertResp, null, 2));
 if (!runRecordId) {
   console.error('Could not create run record in Grist');
   Deno.exit(1);
 }
-
-addFileRecordsToGrist(options, existingCollectionId, runRecordId, 'gen', [outPath]);

@@ -48,7 +48,7 @@ export const getMimeTypeByPath = (path: string): string => {
   }
 }
 
-export const addRunRecordToGrist = async (options: any, collectionId: string, tool: string, cliRunName: string, inputFileIds: number[]) => {
+export const addRunRecordToGrist = async (options: any, collectionId: string, tool: string, cliRunName: string, inputFileIds: number[], output_log: string) => {
     const runUuid = crypto.randomUUID();
     const runName = getRunName(cliRunName, tool);
 
@@ -59,6 +59,7 @@ export const addRunRecordToGrist = async (options: any, collectionId: string, to
         tool: tool,
         input_files: inputFileIds.length ? ["L", ...inputFileIds] : null,
         timestamp: new Date().toISOString(),
+        output_log: output_log || null,
     };
 
     try {

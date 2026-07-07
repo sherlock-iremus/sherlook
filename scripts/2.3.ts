@@ -1,7 +1,7 @@
 import { Command } from 'jsr:@cliffy/command@1.0.0';
 import { walk } from "jsr:@std/fs@0.224.0";
-import { join, basename, extname, dirname } from "jsr:@std/path@0.224.0";
-import { RAW_FOLDER_PATH, GEN_FOLDER_PATH } from './consts.ts';
+import { join, basename, extname, dirname, relative } from "jsr:@std/path@0.224.0";
+import { GEN_FOLDER_PATH } from './consts.ts';
 import { addRunRecordToGrist, addFileRecordsToGrist, getMD5FromFile } from './utils.ts';
 import { fetchRecords as fetchGristRecords } from "https://raw.githubusercontent.com/sherlock-iremus/sherlock-deno/refs/heads/main/common-grist.ts";
 
@@ -22,10 +22,11 @@ const { options } = await new Command()
   .option("--grist-run-table-id <grist-run-table-id:string>", "")
   .option("--grist-collection-table-id <grist-collection-table-id:string>", "")
   .option("--run-name <run-name:string>", "Optional run name to override generated name")
+  .option("--put-file-name-in-txt", "Prepend relative file path (from repo) at start of generated txt files")
   .parse();
 
 const TOOL_NAME = "PDF to TXT";
-const { repo, collectionUuid } = options;
+const { repo, collectionUuid, putFileNameInTxt } = options;
 
 console.log("Fetching collections definitions from Grist... ⏳");
 const collectionRecords: CollectionRecord[] = await fetchGristRecords(
@@ -113,7 +114,13 @@ for (const p of genPdfPaths) {
     const text = await extractTextFromPdf(p);
     const name = basename(p, '.pdf') + '.txt';
     const outPath = join(dirname(p), name);
-    await Deno.writeTextFile(outPath, text);
+    if (putFileNameInTxt) {
+      const rel = relative(repo, p);
+      const outText = `<document source_file="${rel}">\n\n${text}\n\n</document>`;
+      await Deno.writeTextFile(outPath, outText);
+    } else {
+      await Deno.writeTextFile(outPath, text);
+    }
     console.log(`Wrote text ${name}`);
     extractedFiles.push(outPath);
   } catch (e) {
