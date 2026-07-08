@@ -161,5 +161,56 @@ TODO:
 - factoriser accès au .env
 - gérer csv >150 lignes (100 résultats max ??, soit créer n-collections, soit voir si le LLM arrive à paginer) => peut être sortir de l'endpoint chat-completions avec outil search. => en fait on peut même abandonner la création de collection. Sauf si on compte poser directmeent des questions analytiques avec les txt source.
 - 
+            console.warn("TODO: remove irrelevant previous run record : " + existingRecord.fields.Generated_by);
 
 quand passage sur koechlin, utiliser plutôt l'OCR en fichiers sources.
+passer à response_format: {
+  type: "json_schema",
+  ...
+}
+
+Pour de l'ETL, phase amont d'une pipeline d'analyse d'un corpus par un LLM, l'état de l'art dit qu'il ne faut pas utiliser le RAG.
+Ainsi, on va plutôt construire le JSON suivant et l'envoyer au LLM qui devra sortir un CSV structuré
+
+```json
+[{
+    "source_file": "gen/pokedex-1-01.txt",
+    "content": "..."
+},
+{
+    "source_file": "gen/pokedex-1-02.txt",
+    "content": "..."
+},
+    ...
+]```
+
+
+
+                        ETL
+        PDF/TXT ───────────────► CSV/SQLite
+                                    |
+                        +------------+------------+
+                        |                         |
+    SQL/tool calling (question factuelle)   Embeddings (question sémantique)
+                        |                         |
+                        +------------+------------+
+                                    |
+                                    ▼
+                                    Albert
+
+Question utilisateur
+        |
+        v
+LLM
+        |
+        +--> SQL ?
+        |      |
+        |      v
+        |   SELECT ...
+        |      |
+        |   SQLite
+        |
+        +--> Question analytique ?
+               |
+               v
+          RAG vectoriel

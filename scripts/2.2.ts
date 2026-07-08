@@ -1,6 +1,6 @@
 import { Command } from 'jsr:@cliffy/command@1.0.0';
-import { addFileRecordsToGrist, addRunRecordToGrist, getMD5FromFile } from './utils.ts';
-import { fetchRecords as fetchGristRecords } from "https://raw.githubusercontent.com/sherlock-iremus/sherlock-deno/refs/heads/main/common-grist.ts";
+import { addFileRecordsToGrist, addRunRecordToGrist, getCorrespondingCollectionId, getCorrespondingRunId, getIdsByMD5FromGrist, getMD5FromFile, getScriptDefinition, logScriptEnd, logScriptStart, SCRIPT_TYPE, ScriptDefinition } from './utils.ts';
+import { GEN_FOLDER_PATH } from './consts.ts';
 
 const { options } = await new Command()
   .name("SHERLOOK Convert PDFs to Images")
@@ -19,31 +19,20 @@ const { options } = await new Command()
   .option("--output-file <output-file:string>", "output PNG file path", {collect: true})
   .parse();
 
-const TOOL_NAME = "PDF to PNG";
-const { collectionUuid } = options;
+  const { repo, collectionUuid } = options;
+  
+  const scriptDefiniton: ScriptDefinition = getScriptDefinition(
+      "PDF to PNG",
+      SCRIPT_TYPE.determinist,
+      options.runName,
+      GEN_FOLDER_PATH,
+      GEN_FOLDER_PATH
+  );
 
-console.log("Fetching collections definitions from Grist... ⏳");
-const collectionRecords: CollectionRecord[] = await fetchGristRecords(
-  options.gristBase,
-  options.gristApiKey,
-  options.gristDocId,
-  options.gristCollectionTableId
-);
+logScriptStart(scriptDefiniton);
 
-const existingCollectionId = collectionRecords.find(r => r.fields.UUID === collectionUuid)?.id;
-if (!existingCollectionId) {
-  console.error(``);
-  throw console.error(`No existing collection found in Grist with UUID ${collectionUuid}. Please create the collection in Grist first and re-run the script.`);
-}
-
-// Fetch Files table to lookup generated PNG MD5s
-console.log("Fetching Files table records from Grist... ⏳");
-const fileRecords: RawRecord[] = await fetchGristRecords(
-  options.gristBase,
-  options.gristApiKey,
-  options.gristDocId,
-  options.gristFilesTableId
-);
+const collectionRecordId = await getCorrespondingCollectionId(options, collectionUuid);
+const existingRunId = await getCorrespondingRunId(options, collectionRecordId, scriptDefiniton.runName);
 
 // Compute MD5s for input PDF files and collect matching Grist IDs
 const inputPdfMd5Set = new Set<string>();
@@ -58,20 +47,14 @@ for (const filePath of inputFilePaths) {
   }
 }
 
-const inputPdfGristIds: number[] = (fileRecords || [])
-  .filter(r => r.fields && inputPdfMd5Set.has(r.fields.MD5))
-  .map(r => r.id);
+const inputPdfGristIds: number[] = await getIdsByMD5FromGrist(options, inputPdfMd5Set);
 
-const runRecordId = await addRunRecordToGrist(options, existingCollectionId, TOOL_NAME, options.runName, inputPdfGristIds);
-if (!runRecordId) {
-  console.error("Could not log run in Grist. Exiting.");
-  Deno.exit(1);
-}
-console.log(`Run record created in Grist with ID: ${runRecordId}`);
+const runRecordId = await addRunRecordToGrist(options, collectionRecordId, scriptDefiniton.toolName, scriptDefiniton.runName, inputPdfGristIds, null, null, existingRunId);
 
 // Prepare output PNG files for recording
 const outputFilePaths = (options.outputFile || []) as string[];
 
 console.log(`Recording ${outputFilePaths.length} PNG file(s) to Grist...`);
-addFileRecordsToGrist(options, existingCollectionId, runRecordId, "gen", outputFilePaths)
-console.log("PNG records pushed ✅");
+addFileRecordsToGrist(options, collectionRecordId, runRecordId, "gen", outputFilePaths)
+
+logScriptEnd(scriptDefiniton, runRecordId);

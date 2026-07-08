@@ -1,9 +1,8 @@
 import { Command } from "jsr:@cliffy/command@1.0.0";
 import { walk } from "jsr:@std/fs@0.224.0";
 
-import { fetchRecords as fetchGristRecords } from "https://raw.githubusercontent.com/sherlock-iremus/sherlock-deno/refs/heads/main/common-grist.ts";
 import { RAW_FOLDER_PATH } from "./consts.ts";
-import { addFileRecordsToGrist, addRunRecordToGrist } from "./utils.ts";
+import { addFileRecordsToGrist, addRunRecordToGrist, getCorrespondingCollectionId, getCorrespondingRunId, getScriptDefinition, logScriptEnd, logScriptStart, SCRIPT_TYPE, ScriptDefinition } from "./utils.ts";
 
 const { options } = await new Command()
     .name("SHERLOOK Grist Collection Declaration")
@@ -20,33 +19,25 @@ const { options } = await new Command()
     .option("--repo <raw-dir:string>", "Chemin du repository de la collection")
     .parse();
 
-const TOOL_NAME = "Scan repo /raw";
-
 const { repo, collectionUuid } = options;
+
+const scriptDefiniton: ScriptDefinition = getScriptDefinition(
+    "Scan repo /raw",
+    SCRIPT_TYPE.determinist,
+    options.runName,
+    RAW_FOLDER_PATH
+);
+
+logScriptStart(scriptDefiniton);
+const collectionRecordId = await getCorrespondingCollectionId(options, collectionUuid);
+const existingRunId = await getCorrespondingRunId(options, collectionRecordId, scriptDefiniton.runName);
+
 const files = [];
-for await (const entry of walk(repo + RAW_FOLDER_PATH, { maxDepth: 1 })) {
+for await (const entry of walk(repo + scriptDefiniton.inputFolder, { maxDepth: 1 })) {
     if (entry.isFile) files.push(entry.path);
 }
 
-console.log("Fetching collections definitions from Grist... ⏳");
-const collectionRecords: CollectionRecord[] = await fetchGristRecords(
-    options.gristBase,
-    options.gristApiKey,
-    options.gristDocId,
-    options.gristCollectionTableId
-);
+const runRecordId = await addRunRecordToGrist(options, collectionRecordId, scriptDefiniton.toolName, scriptDefiniton.runName, [], null, null, existingRunId);
 
-const existingCollectionId = collectionRecords.find(r => r.fields.UUID === collectionUuid)?.id;
-if (!existingCollectionId) {
-    console.error(``);
-    throw console.error(`No existing collection found in Grist with UUID ${collectionUuid}. Please create the collection in Grist first and re-run the script.`);
-}
-
-const runRecordId = await addRunRecordToGrist(options, existingCollectionId, TOOL_NAME, options.runName, []);
-if (!runRecordId) {
-    console.error("Could not log run in Grist. Exiting.");
-    Deno.exit(1);
-}
-console.log(`Run record created in Grist with ID: ${runRecordId}`);
-addFileRecordsToGrist(options, existingCollectionId, runRecordId, "raw", files)
-console.log("Files records pushed ✅");
+await addFileRecordsToGrist(options, collectionRecordId, runRecordId, "raw", files)
+logScriptEnd(scriptDefiniton, runRecordId);

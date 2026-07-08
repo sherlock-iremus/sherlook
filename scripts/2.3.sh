@@ -47,7 +47,8 @@ if [ -z "$COLLECTION_UUID" ] || [ -z "$REPO_PATH" ]; then
     exit 1
 fi
 
-export $(grep -v '^#' /Users/iremus/Dev/sherlook/.env | xargs)
+source "$SCRIPT_DIR/get-env.sh"
+load_env
 
 if [ -n "$RUN_NAME" ]; then
     RUN_NAME_ARG=(--run-name "$RUN_NAME")

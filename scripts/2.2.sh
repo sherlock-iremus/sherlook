@@ -11,7 +11,8 @@ COLLECTION_UUID="$1"
 REPO_PATH="$2"
 RUN_NAME="$3"
 
-export $(grep -v '^#' /Users/iremus/Dev/sherlook/.env | xargs)
+source "$SCRIPT_DIR/get-env.sh"
+load_env
 
 # Convert all PDFs in gen/ to PNG and collect input/output paths
 DECLARE_A="declare -a INPUT_PDFS"

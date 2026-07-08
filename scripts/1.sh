@@ -11,8 +11,8 @@ COLLECTION_UUID="$1"
 REPO_PATH="$2"
 RUN_NAME="$3"
 
-export $(grep -v '^#' /Users/iremus/Dev/sherlook/.env | xargs)
-
+source "$SCRIPT_DIR/get-env.sh"
+load_env
 
 if [ -n "$RUN_NAME" ]; then
     RUN_NAME_ARG=(--run-name "$RUN_NAME")
@@ -31,5 +31,5 @@ deno --allow-env --allow-net --allow-read --unsafely-ignore-certificate-errors \
         "${RUN_NAME_ARG[@]}" \
         --collection-uuid "$COLLECTION_UUID" \
         --repo "$REPO_PATH"
-
+       
 exit 0

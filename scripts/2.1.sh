@@ -11,7 +11,8 @@ COLLECTION_UUID="$1"
 REPO_PATH="$2"
 RUN_NAME="$3"
 
-export $(grep -v '^#' /Users/iremus/Dev/sherlook/.env | xargs)
+source "$SCRIPT_DIR/get-env.sh"
+load_env
 
 
 if [ -n "$RUN_NAME" ]; then

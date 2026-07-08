@@ -3,8 +3,7 @@ import { PDFDocument } from "https://esm.sh/pdf-lib";
 import { walk } from "jsr:@std/fs@0.224.0";
 import { join, basename, extname } from "jsr:@std/path@0.224.0";
 import { RAW_FOLDER_PATH, GEN_FOLDER_PATH } from './consts.ts';
-import { addFileRecordsToGrist, addRunRecordToGrist, getMD5FromFile } from './utils.ts';
-import { fetchRecords as fetchGristRecords } from "https://raw.githubusercontent.com/sherlock-iremus/sherlock-deno/refs/heads/main/common-grist.ts";
+import { addFileRecordsToGrist, addRunRecordToGrist, getCorrespondingCollectionId, getCorrespondingRunId, getIdsByMD5FromGrist, getMD5FromFile, getScriptDefinition, logScriptEnd, logScriptStart, SCRIPT_TYPE, ScriptDefinition } from './utils.ts';
 
 const { options } = await new Command()
   .name("SHERLOOK Split PDFs")
@@ -21,36 +20,25 @@ const { options } = await new Command()
   .option("--run-name <run-name:string>", "Optional run name to override generated name")
   .parse();
 
-const TOOL_NAME = "PDF Split";
-const { repo, collectionUuid } = options;
+  const { repo, collectionUuid } = options;
+  
+  const scriptDefiniton: ScriptDefinition = getScriptDefinition(
+      "PDF Split",
+      SCRIPT_TYPE.determinist,
+      options.runName,
+      RAW_FOLDER_PATH,
+      GEN_FOLDER_PATH
+  );
 
-// TODO: Delete previously generated entries in Grist, because this script is determinist.
-console.log("Fetching collections definitions from Grist... ⏳");
-const collectionRecords: CollectionRecord[] = await fetchGristRecords(
-  options.gristBase,
-  options.gristApiKey,
-  options.gristDocId,
-  options.gristCollectionTableId
-);
+logScriptStart(scriptDefiniton);
 
-const existingCollectionId = collectionRecords.find(r => r.fields.UUID === collectionUuid)?.id;
-if (!existingCollectionId) {
-  console.error(``);
-  throw console.error(`No existing collection found in Grist with UUID ${collectionUuid}. Please create the collection in Grist first and re-run the script.`);
-}
-
-console.log("Fetching Files table records from Grist... ⏳");
-const fileRecords: RawRecord[] = await fetchGristRecords(
-  options.gristBase,
-  options.gristApiKey,
-  options.gristDocId,
-  options.gristFilesTableId
-);
+const collectionRecordId = await getCorrespondingCollectionId(options, collectionUuid);
+const existingRunId = await getCorrespondingRunId(options, collectionRecordId, scriptDefiniton.runName);
 
 const rawMd5Set = new Set<string>();
 const generatedFiles: any[] = [];
 
-for await (const entry of walk(repo + RAW_FOLDER_PATH, { maxDepth: 1 })) {
+for await (const entry of walk(repo + scriptDefiniton.inputFolder, { maxDepth: 1 })) {
   if (!entry.isFile) continue;
   if (extname(entry.path).toLowerCase() !== ".pdf") continue;
 
@@ -66,22 +54,16 @@ for await (const entry of walk(repo + RAW_FOLDER_PATH, { maxDepth: 1 })) {
     newPdf.addPage(page);
     const pdfBytes = await newPdf.save();
     const outName = `${base}-${String(i + 1).padStart(String(pageCount).length, "0")}.pdf`;
-    const outPath = join(repo, GEN_FOLDER_PATH, outName);
+    const outPath = join(repo, scriptDefiniton.outputFolder, outName);
     await Deno.writeFile(outPath, pdfBytes);
     console.log(`Wrote ${outName}`);
     generatedFiles.push(outPath);
   }
 }
 
-const rawFilesGristIds: number[] = (fileRecords || [])
-  .filter(r => r.fields && rawMd5Set.has(r.fields.MD5))
-  .map(r => r.id);
+const rawFilesGristIds: number[] = await getIdsByMD5FromGrist(options, rawMd5Set);
 
-const runRecordId = await addRunRecordToGrist(options, existingCollectionId, TOOL_NAME, options.runName, rawFilesGristIds);
-if (!runRecordId) {
-  console.error("Could not log run in Grist. Exiting.");
-  Deno.exit(1);
-}
-console.log(`Run record created in Grist with ID: ${runRecordId}`);
+const runRecordId = await addRunRecordToGrist(options, collectionRecordId, scriptDefiniton.toolName, scriptDefiniton.runName, rawFilesGristIds, null, null, existingRunId);
+await addFileRecordsToGrist(options, collectionRecordId, runRecordId, "gen", generatedFiles)
 
-addFileRecordsToGrist(options, existingCollectionId, runRecordId, "gen", generatedFiles)
+logScriptEnd(scriptDefiniton, runRecordId);
