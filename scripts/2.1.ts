@@ -37,8 +37,8 @@ const existingRunId = await getCorrespondingRunId(options, collectionRecordId, s
 
 const rawMd5Set = new Set<string>();
 const generatedFiles: any[] = [];
-
-for await (const entry of walk(repo + scriptDefiniton.inputFolder, { maxDepth: 1 })) {
+try { await Deno.mkdir(join(repo, scriptDefiniton.outputFolder), { recursive: true }); } catch (_) { }
+for await (const entry of walk(join(repo, scriptDefiniton.inputFolder), { maxDepth: 1 })) {
   if (!entry.isFile) continue;
   if (extname(entry.path).toLowerCase() !== ".pdf") continue;
 

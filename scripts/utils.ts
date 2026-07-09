@@ -3,6 +3,8 @@ const {
 } = await import('node:crypto');
 import pdfParse from 'npm:pdf-parse@1.1.1';
 import path from 'node:path';
+import { join } from "jsr:@std/path@0.224.0";
+import { walk } from 'jsr:@std/fs@0.224.0';
 import { fetchRecords as fetchGristRecords, addRecords, writeValueById, patchRecord as putRecords } from "https://gitlab.huma-num.fr/sherlock/sherlock-deno/-/raw/main/common-grist.ts";
 
 export const getMD5FromFile = async (file: string) => {
@@ -210,27 +212,102 @@ export enum SCRIPT_TYPE {
 }
 
 export const getScriptDefinition = (toolName: string, type: SCRIPT_TYPE, cliRunName: string, inputFolder: string, outputFolder?: string): ScriptDefinition => {
+    const runName = getRunName(cliRunName, toolName);
     const scriptDefiniton: ScriptDefinition = {
         toolName: toolName,
         type: type,
-        runName: getRunName(cliRunName, toolName),
+        runName: runName,
         inputFolder: inputFolder,
-        outputFolder: outputFolder
+        outputFolder: type === SCRIPT_TYPE.determinist ? outputFolder : join(outputFolder, runName) 
     };
     return scriptDefiniton;
-}   
+}
 
 export const getIdsByMD5FromGrist = async (options: any, md5Set: Set<string>): Promise<number[]> => {
-  
+
     console.log("Fetching Files table records from Grist... ⏳");
     const fileRecords: RawRecord[] = await fetchGristRecords(
-      options.gristBase,
-      options.gristApiKey,
-      options.gristDocId,
-      options.gristFilesTableId
+        options.gristBase,
+        options.gristApiKey,
+        options.gristDocId,
+        options.gristFilesTableId
     );
     return (fileRecords || [])
-      .filter(r => r.fields && md5Set.has(r.fields.MD5))
-      .map(r => r.id);
-    
+        .filter(r => r.fields && md5Set.has(r.fields.MD5))
+        .map(r => r.id);
+
+}
+
+export const getRegexFromInput = (inputRegex: string | undefined): RegExp | null => {
+    let re: RegExp | null = null;
+    if (inputRegex) {
+        try {
+            re = new RegExp(inputRegex);
+        } catch (e) {
+            console.error('Invalid input-regex:', e.message || e);
+            Deno.exit(1);
+        }
+    }
+    return re;
+}
+export const getFilesMatchingRegex = async (repo: string, inputRegex: string): Promise<string[]> => {
+    const re = getRegexFromInput(inputRegex);
+    console.log('Scanning repository for matching files...');
+    const matches: string[] = [];
+    for await (const entry of walk(repo, { maxDepth: 50 })) {
+        if (!entry.isFile) continue;
+        const p = entry.path;
+        if (re) {
+            if (re.test(p)) matches.push(p);
+        }
+    }
+
+    console.log(`Found ${matches.length} matching file(s):`);
+    for (const m of matches) console.log(m);
+
+    if (matches.length === 0) {
+        console.log('No files to push to Albert. Exiting.');
+        Deno.exit(0);
+    }
+
+    return matches;
+}
+
+export const getGristIdsByMatchedFiles = async (options: any, matchedFiles: string[]): Promise<number[]> => {
+    const md5Set = new Set(await Promise.all(matchedFiles.map(async p => getMD5FromFile(p))));
+    return await getIdsByMD5FromGrist(options, md5Set);
+}
+
+export const fetchWithRetry = async (url: string, options: any, maxRetries = 3): Promise<Response> => {
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 600000); // 10 minute timeout
+            
+            const res = await fetch(url, { ...options, signal: controller.signal });
+            clearTimeout(timeoutId);
+            
+            // Retry on 504 (Gateway Timeout) and 503 (Service Unavailable)
+            if ((res.status === 504 || res.status === 503) && attempt < maxRetries - 1) {
+                const delay = Math.pow(2, attempt) * 5000; // 5s, 10s, 20s
+                console.warn(`⏳ Server returned ${res.status}, retrying in ${delay}ms... (attempt ${attempt + 1}/${maxRetries})`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+                continue;
+            }
+            
+            return res;
+        } catch (e: any) {
+            if (e.name === 'AbortError') {
+                if (attempt < maxRetries - 1) {
+                    const delay = Math.pow(2, attempt) * 5000;
+                    console.warn(`⏳ Request timeout, retrying in ${delay}ms... (attempt ${attempt + 1}/${maxRetries})`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    continue;
+                }
+                throw new Error(`Request timeout after ${maxRetries} attempts`);
+            }
+            throw e;
+        }
+    }
+    throw new Error('Max retries exceeded');
 }

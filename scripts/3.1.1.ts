@@ -1,8 +1,7 @@
 import { Command } from 'jsr:@cliffy/command@1.0.0';
-import { walk } from 'jsr:@std/fs@0.224.0';
-import { join, basename } from 'jsr:@std/path@0.224.0';
-import { fetchRecords as fetchGristRecords } from "https://raw.githubusercontent.com/sherlock-iremus/sherlock-deno/refs/heads/main/common-grist.ts";
-import { addRunRecordToGrist, getMD5FromFile, getRunName, getMimeTypeByPath } from './utils.ts';
+import { basename } from 'jsr:@std/path@0.224.0';
+import { addRunRecordToGrist, getMimeTypeByPath, getScriptDefinition, ScriptDefinition, SCRIPT_TYPE, getRegexFromInput, getIdsByMD5FromGrist, getFilesMatchingRegex, getGristIdsByMatchedFiles, logScriptStart, getCorrespondingRunId, getCorrespondingCollectionId, logScriptEnd } from './utils.ts';
+import { DAT_FOLDER_PATH, GEN_FOLDER_PATH } from './consts.ts';
 
 const { options } = await new Command()
   .name('SHERLOOK 3.1.1')
@@ -21,71 +20,24 @@ const { options } = await new Command()
   .option('--albert-api-key <albert-api-key:string>', '')
   .parse();
 
-const { repo, inputRegex } = options;
-const { albertBase, albertApiKey } = options;
-const tool = "Albert Collection Ingestion";
-let re: RegExp | null = null;
-if (inputRegex) {
-  try {
-    re = new RegExp(inputRegex);
-  } catch (e) {
-    console.error('Invalid input-regex:', e.message || e);
-    Deno.exit(1);
-  } 
-}
+const { repo, collectionUuid, inputRegex, albertBase, albertApiKey } = options;
 
-
-console.log('Scanning repository for matching files...');
-const matches: string[] = [];
-for await (const entry of walk(repo, { maxDepth: 50 })) {
-  if (!entry.isFile) continue;
-  const p = entry.path;
-  console.log(`Checking file: ${p}`);
-  console.log(`Input regex: ${inputRegex}`);
-  if (re) {
-    if (re.test(p)) matches.push(p);
-  }
-}
-
-console.log(`Found ${matches.length} matching file(s):`);
-for (const m of matches) console.log(m);
-
-if (matches.length === 0) {
-  console.log('No files to push to Albert. Exiting.');
-  Deno.exit(0);
-}
-
-// Lookup Files table in Grist to map MD5 -> file record id
-console.log('Fetching Files table records from Grist... ⏳');
-const fileRecords: RawRecord[] = await fetchGristRecords(
-  options.gristBase,
-  options.gristApiKey,
-  options.gristDocId,
-  options.gristFilesTableId
+const scriptDefiniton: ScriptDefinition = getScriptDefinition(
+  "Albert Collection Ingestion",
+  SCRIPT_TYPE.determinist,
+  options.runName,
+  GEN_FOLDER_PATH,
+  undefined
 );
 
-// Compute MD5s of matched files and collect corresponding Grist IDs
-const matchedMd5s = new Map<string, string>();
-for (const p of matches) {
-  try {
-    const md5 = await getMD5FromFile(p);
-    matchedMd5s.set(p, md5);
-  } catch (e) {
-    console.warn(`Could not hash ${p}: ${e}`);
-  }
-}
+logScriptStart(scriptDefiniton);
+const collectionRecordId = await getCorrespondingCollectionId(options, collectionUuid);
+const existingRunId = await getCorrespondingRunId(options, collectionRecordId, scriptDefiniton.runName);
 
-const inputGristIds: number[] = [];
-for (const rec of (fileRecords || [])) {
-  if (!rec || !rec.fields) continue;
-  const md5 = rec.fields.MD5;
-  for (const [path, fileMd5] of matchedMd5s.entries()) {
-    if (fileMd5 === md5) inputGristIds.push(rec.id);
-  }
-}
+const matches = await getFilesMatchingRegex(repo, inputRegex);
+const inputGristIds = await getGristIdsByMatchedFiles(options, matches);
 
-const runName = getRunName(options.runName, tool);
-console.log(`Creating collection '${runName}' in Albert...`);
+console.log(`Creating collection '${options.runName}' in Albert...`);
 const resp = await fetch(albertBase + '/v1/collections', {
   method: 'POST',
   headers: {
@@ -93,7 +45,7 @@ const resp = await fetch(albertBase + '/v1/collections', {
     "Content-Type": "application/json",
   },
   body: JSON.stringify({
-    name: runName,
+    name: options.runName,
   }),
 });
 
@@ -109,7 +61,7 @@ if (!albertCollectionId) {
   Deno.exit(1);
 }
 
-console.log(`Pushing files to collection '${runName}' in Albert...`);
+console.log(`Pushing files to collection '${options.runName}' in Albert...`);
 
 // Upload each matched file as a separate document under the created collection
 for (const p of matches) {
@@ -141,21 +93,5 @@ for (const p of matches) {
   }
 }
 
-// Create a Grist run record linking input files (those matched in Grist) and then record the output file
-const collectionRecords: CollectionRecord[] = await fetchGristRecords(
-  options.gristBase,
-  options.gristApiKey,
-  options.gristDocId,
-  options.gristCollectionTableId
-);
-const existingCollectionId = collectionRecords.find(r => r.fields.UUID === options.collectionUuid)?.id;
-if (!existingCollectionId) {
-  console.error('Could not find collection in Grist with provided UUID');
-  Deno.exit(1);
-}
-
-const runRecordId = await addRunRecordToGrist(options, existingCollectionId, tool, options.runName, inputGristIds, JSON.stringify(albertResp, null, 2));
-if (!runRecordId) {
-  console.error('Could not create run record in Grist');
-  Deno.exit(1);
-}
+const runRecordId = await addRunRecordToGrist(options, collectionRecordId, scriptDefiniton.toolName, scriptDefiniton.runName, inputGristIds, JSON.stringify(albertResp, null, 2), null, existingRunId);
+logScriptEnd(scriptDefiniton, runRecordId);

@@ -19,7 +19,7 @@ const { options } = await new Command()
   .option("--output-file <output-file:string>", "output PNG file path", {collect: true})
   .parse();
 
-  const { repo, collectionUuid } = options;
+  const { collectionUuid } = options;
   
   const scriptDefiniton: ScriptDefinition = getScriptDefinition(
       "PDF to PNG",

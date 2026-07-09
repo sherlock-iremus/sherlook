@@ -156,18 +156,26 @@ Exécution du script [3.1](3.1.sh), qui, à partir des fichiers dérivés (texte
 
 
 TODO: 
-- créer une fonction générique "getInputFiles" qui prend en paramètre des conditions (liste d'extensions, nombres de pages, dossier) et qui retourne les entrées grist couplés au fichier sur le disque
-- création de la structure : push grist ou fichier CSV importable ?
-- factoriser accès au .env
-- gérer csv >150 lignes (100 résultats max ??, soit créer n-collections, soit voir si le LLM arrive à paginer) => peut être sortir de l'endpoint chat-completions avec outil search. => en fait on peut même abandonner la création de collection. Sauf si on compte poser directmeent des questions analytiques avec les txt source.
-- 
-            console.warn("TODO: remove irrelevant previous run record : " + existingRecord.fields.Generated_by);
-
+- stocker modèle utilisé et token consommés
+- paramétrer modèle en ligne de commande
+- sauvegarder sur le disque chaque batch après requête plutôt que les agréger puis sauvegarder 
+laisser le choix en entrée :
+- soit une regex
+- soit des UUID de runs sources dont on prendra les output files 
 quand passage sur koechlin, utiliser plutôt l'OCR en fichiers sources.
 passer à response_format: {
   type: "json_schema",
   ...
 }
+
+unicité du MD5 ne fonctionne pas.
+en effet, on peut avoir deux fois le même fichier (exemple : sortie d'une même requête SQL par deux RUN différentes auront le même MD5).
+
+
+
+
+
+
 
 Pour de l'ETL, phase amont d'une pipeline d'analyse d'un corpus par un LLM, l'état de l'art dit qu'il ne faut pas utiliser le RAG.
 Ainsi, on va plutôt construire le JSON suivant et l'envoyer au LLM qui devra sortir un CSV structuré
@@ -214,3 +222,8 @@ LLM
                |
                v
           RAG vectoriel
+
+
+
+Réunion 09/07/2026
+

@@ -6,11 +6,14 @@
     "jsr:@cliffy/internal@1.0.0": "1.0.0",
     "jsr:@cliffy/table@1.0.0": "1.0.0",
     "jsr:@std/assert@0.224": "0.224.0",
+    "jsr:@std/csv@^1.0.6": "1.0.6",
     "jsr:@std/fmt@^1.0.9": "1.0.10",
     "jsr:@std/fs@0.224.0": "0.224.0",
     "jsr:@std/path@0.224": "0.224.0",
     "jsr:@std/path@0.224.0": "0.224.0",
+    "jsr:@std/streams@^1.0.9": "1.1.1",
     "jsr:@std/text@^1.0.17": "1.0.19",
+    "npm:pdf-parse-deno@1.1.1": "1.1.1",
     "npm:pdf-parse@1.1.1": "1.1.1"
   },
   "jsr": {
@@ -43,6 +46,12 @@
     "@std/assert@0.224.0": {
       "integrity": "8643233ec7aec38a940a8264a6e3eed9bfa44e7a71cc6b3c8874213ff401967f"
     },
+    "@std/csv@1.0.6": {
+      "integrity": "52ef0e62799a0028d278fa04762f17f9bd263fad9a8e7f98c14fbd371d62d9fd",
+      "dependencies": [
+        "jsr:@std/streams"
+      ]
+    },
     "@std/fmt@1.0.10": {
       "integrity": "90dfba288802ac6de82fb31d0917eb9e4450b9925b954d5e51fc29ac07419db5"
     },
@@ -58,6 +67,9 @@
       "dependencies": [
         "jsr:@std/assert"
       ]
+    },
+    "@std/streams@1.1.1": {
+      "integrity": "92556d350e537e9dce527a6d08f6f15be3ff65e656079dea69d15252187c7613"
     },
     "@std/text@1.0.19": {
       "integrity": "003a0e032d360e8c3a4e0410fb792c77a66bd6553fee9d60c6ec1bce30d29223"
@@ -76,6 +88,13 @@
     "node-ensure@0.0.0": {
       "integrity": "sha512-DRI60hzo2oKN1ma0ckc6nQWlHU69RH6xN0sjQTjMpChPfTYvKZdcQFfdYK2RWbJcKyUizSIy/l8OTGxMAM1QDw=="
     },
+    "pdf-parse-deno@1.1.1": {
+      "integrity": "sha512-sEQEB1IDT8xZ5+L4n4UVJfBaqN3ffTyfF8CcA386smR9Xey4TBW1ivx0fAhHrErmNLmlp2oy++B7GymwDxmBvg==",
+      "dependencies": [
+        "debug",
+        "node-ensure"
+      ]
+    },
     "pdf-parse@1.1.1": {
       "integrity": "sha512-v6ZJ/efsBpGrGGknjtq9J/oC8tZWq0KWL5vQrk2GlzLEQPUDB1ex+13Rmidl1neNN358Jn9EHZw5y07FFtaC7A==",
       "dependencies": [
@@ -85,6 +104,7 @@
     }
   },
   "redirects": {
+    "https://deno.land/x/sqlite/mod.ts": "https://deno.land/x/sqlite@v3.9.1/mod.ts",
     "https://esm.sh/@pdf-lib/standard-fonts@^1.0.0?target=denonext": "https://esm.sh/@pdf-lib/standard-fonts@1.0.0?target=denonext",
     "https://esm.sh/@pdf-lib/upng@^1.0.1?target=denonext": "https://esm.sh/@pdf-lib/upng@1.0.1?target=denonext",
     "https://esm.sh/pako@^1.0.10?target=denonext": "https://esm.sh/pako@1.0.11?target=denonext",
@@ -94,6 +114,25 @@
     "https://esm.sh/tslib@^1.11.1?target=denonext": "https://esm.sh/tslib@1.14.1?target=denonext"
   },
   "remote": {
+    "https://deno.land/std@0.224.0/assert/assert.ts": "09d30564c09de846855b7b071e62b5974b001bb72a4b797958fe0660e7849834",
+    "https://deno.land/std@0.224.0/assert/assertion_error.ts": "ba8752bd27ebc51f723702fac2f54d3e94447598f54264a6653d6413738a8917",
+    "https://deno.land/std@0.224.0/csv/_io.ts": "568718b7eb4cf3ba140b0690a00ef5a8416ceae9a4116f386114c83717bd8a9e",
+    "https://deno.land/std@0.224.0/csv/csv_parse_stream.ts": "f06696ed1fbda5cb75426dff735b9cc91227eb0fa5367591b98bf88b99ae3048",
+    "https://deno.land/std@0.224.0/csv/csv_stringify_stream.ts": "b564e43b884eb9ab8e1efee8c30a0868a1a9328a33c32a7dd436dc26f63954ac",
+    "https://deno.land/std@0.224.0/csv/mod.ts": "289ecf79b3609f63dfc1d39a7c791f8f14b73b29fb65bbb6b3e3e2bd0cddc75d",
+    "https://deno.land/std@0.224.0/csv/parse.ts": "e2d5e82e19b71a968f5fcd3b76b438ee6f646fe8e948c4c2d3b00ad9cd0a659a",
+    "https://deno.land/std@0.224.0/csv/stringify.ts": "9e0badcbc32fc63ee089d2dfbc5721650d5766ef0a554f07243ab8f03f7c3127",
+    "https://deno.land/std@0.224.0/streams/_common.ts": "948735ef6d140cd6916dca861197b88fc57db52c2f923c392b7a14033d8fed4b",
+    "https://deno.land/std@0.224.0/streams/text_delimiter_stream.ts": "94dfc900204e306496c1b58c80473db57b6097afdcb8ea9eaff453a193a659f1",
+    "https://deno.land/x/sqlite@v3.9.1/build/sqlite.js": "2afc7875c7b9c85d89730c4a311ab3a304e5d1bf761fbadd8c07bbdf130f5f9b",
+    "https://deno.land/x/sqlite@v3.9.1/build/vfs.js": "7f7778a9fe499cd10738d6e43867340b50b67d3e39142b0065acd51a84cd2e03",
+    "https://deno.land/x/sqlite@v3.9.1/mod.ts": "e09fc79d8065fe222578114b109b1fd60077bff1bb75448532077f784f4d6a83",
+    "https://deno.land/x/sqlite@v3.9.1/src/constants.ts": "90f3be047ec0a89bcb5d6fc30db121685fc82cb00b1c476124ff47a4b0472aa9",
+    "https://deno.land/x/sqlite@v3.9.1/src/db.ts": "03d0c860957496eadedd86e51a6e650670764630e64f56df0092e86c90752401",
+    "https://deno.land/x/sqlite@v3.9.1/src/error.ts": "f7a15cb00d7c3797da1aefee3cf86d23e0ae92e73f0ba3165496c3816ab9503a",
+    "https://deno.land/x/sqlite@v3.9.1/src/function.ts": "bc778cab7a6d771f690afa27264c524d22fcb96f1bb61959ade7922c15a4ab8d",
+    "https://deno.land/x/sqlite@v3.9.1/src/query.ts": "d58abda928f6582d77bad685ecf551b1be8a15e8e38403e293ec38522e030cad",
+    "https://deno.land/x/sqlite@v3.9.1/src/wasm.ts": "e79d0baa6e42423257fb3c7cc98091c54399254867e0f34a09b5bdef37bd9487",
     "https://esm.sh/@pdf-lib/standard-fonts@1.0.0/denonext/standard-fonts.mjs": "708d496da295d425f227de54b24c0da9be34cd33f5635d9bdd355dc549b49988",
     "https://esm.sh/@pdf-lib/standard-fonts@1.0.0?target=denonext": "6831e71a173d549ea549bc8ca62160b5309cb77c41a4a34b04bc679c9bb390bf",
     "https://esm.sh/@pdf-lib/upng@1.0.1/denonext/upng.mjs": "725dab6b2d126a6cb418f24ed9bd0aa9400949cbbbe8dcb975241236fdfa2d0d",

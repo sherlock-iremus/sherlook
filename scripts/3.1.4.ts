@@ -1,10 +1,9 @@
 import { Command } from 'jsr:@cliffy/command@1.0.0';
-import { walk } from 'jsr:@std/fs@0.224.0';
 import { join, basename, extname, relative } from 'jsr:@std/path@0.224.0';
 import { DB } from 'https://deno.land/x/sqlite/mod.ts';
 import { parse } from 'https://deno.land/std@0.224.0/csv/mod.ts';
-import { fetchRecords as fetchGristRecords } from "https://raw.githubusercontent.com/sherlock-iremus/sherlock-deno/refs/heads/main/common-grist.ts";
-import { addFileRecordsToGrist, addRunRecordToGrist, getMD5FromFile, getRunName } from './utils.ts';
+import { addFileRecordsToGrist, addRunRecordToGrist, getCorrespondingCollectionId, getCorrespondingRunId, getFilesMatchingRegex, getGristIdsByMatchedFiles, getMD5FromFile, getRunName, getScriptDefinition, logScriptEnd, logScriptStart, SCRIPT_TYPE, ScriptDefinition } from './utils.ts';
+import { DAT_FOLDER_PATH } from './consts.ts';
 
 const { options } = await new Command()
   .name('SHERLOOK 3.1.4')
@@ -21,40 +20,23 @@ const { options } = await new Command()
   .option('--input-regex <input-regex:string>', '')
   .parse();
 
-const { repo, inputRegex } = options;
-const tool = 'CSV to SQLite';
+const { repo, collectionUuid, inputRegex } = options;
+const scriptDefiniton: ScriptDefinition = getScriptDefinition(
+    "CSV to SQLite",
+    SCRIPT_TYPE.determinist,
+    options.runName,
+    DAT_FOLDER_PATH,
+    DAT_FOLDER_PATH
+);
 
-if (!inputRegex) {
-  console.error('Missing required argument --input-regex');
-  Deno.exit(1);
-}
+logScriptStart(scriptDefiniton);
+const collectionRecordId = await getCorrespondingCollectionId(options, collectionUuid);
+const existingRunId = await getCorrespondingRunId(options, collectionRecordId, scriptDefiniton.runName);
 
-let re: RegExp;
-try {
-  re = new RegExp(inputRegex);
-} catch (e) {
-  console.error('Invalid input-regex:', e.message || e);
-  Deno.exit(1);
-}
 
-const matchedCsvPaths: string[] = [];
-for await (const entry of walk(repo)) {
-  if (!entry.isFile) continue;
-  const relPath = relative(repo, entry.path);
-  if (re.test(entry.path) || re.test(relPath)) {
-    if (extname(entry.path).toLowerCase() === '.csv') {
-      matchedCsvPaths.push(entry.path);
-      console.log(`Found CSV: ${relPath}`);
-    }
-  }
-}
+const matches = await getFilesMatchingRegex(repo, inputRegex);
 
-if (matchedCsvPaths.length === 0) {
-  console.error(`No CSV files found matching regex: ${inputRegex}`);
-  Deno.exit(1);
-}
-
-const outDir = join(repo, '/dat', getRunName(options.runName, tool));
+const outDir = join(repo, scriptDefiniton.outputFolder);
 try { await Deno.mkdir(outDir, { recursive: true }); } catch (_) { /* ignore if already exists */ }
 
 const outputPaths: string[] = [];
@@ -71,7 +53,7 @@ const makeUniqueName = (base: string) => {
   return name;
 };
 
-for (const csvPath of matchedCsvPaths) {
+for (const csvPath of matches) {
   const csvText = await Deno.readTextFile(csvPath);
   const rows = await parse(csvText, { skipFirstRow: false, trimLeadingSpace: true }) as Array<string[]>;
 
@@ -123,49 +105,12 @@ if (outputPaths.length === 0) {
   Deno.exit(1);
 }
 
-const collectionRecords: CollectionRecord[] = await fetchGristRecords(
-  options.gristBase,
-  options.gristApiKey,
-  options.gristDocId,
-  options.gristCollectionTableId
-);
-const existingCollectionId = collectionRecords.find(r => r.fields.UUID === options.collectionUuid)?.id;
-if (!existingCollectionId) {
-  console.error(`Could not find collection in Grist with UUID ${options.collectionUuid}`);
-  Deno.exit(1);
-}
-
-const inputFileIds: number[] = [];
-try {
-  const rawFileRecords: RawRecord[] = await fetchGristRecords(
-    options.gristBase,
-    options.gristApiKey,
-    options.gristDocId,
-    options.gristFilesTableId
-  );
-
-  for (const csvPath of matchedCsvPaths) {
-    try {
-      const md5 = await getMD5FromFile(csvPath);
-      const matching = rawFileRecords.find(r => r?.fields?.MD5 === md5);
-      if (matching?.id) inputFileIds.push(matching.id);
-    } catch (_e) {
-      console.warn(`Could not hash CSV file for Grist linking: ${csvPath}`);
-    }
-  }
-} catch (_e) {
-  console.warn('Could not resolve input CSV files in Grist. Run will still be recorded.');
-}
-
-const runRecordId = await addRunRecordToGrist(options, existingCollectionId, tool, options.runName, inputFileIds, null, JSON.stringify({
+const inputFileIds = await getGristIdsByMatchedFiles(options, matches);
+const runRecordId = await addRunRecordToGrist(options, collectionRecordId, scriptDefiniton.toolName, scriptDefiniton.runName, inputFileIds, null, JSON.stringify({
   inputRegex,
-  matchedCsvCount: matchedCsvPaths.length,
+  matchedCsvCount: matches.length,
   outputDbCount: outputPaths.length,
-}));
+}), existingRunId);
 
-if (!runRecordId) {
-  console.error('Could not create run record in Grist');
-  Deno.exit(1);
-}
-
-addFileRecordsToGrist(options, existingCollectionId, runRecordId, 'dat', outputPaths);
+addFileRecordsToGrist(options, collectionRecordId, runRecordId, 'dat', outputPaths);
+logScriptEnd(scriptDefiniton, runRecordId);

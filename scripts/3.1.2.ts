@@ -1,8 +1,8 @@
 import { Command } from 'jsr:@cliffy/command@1.0.0';
-import { join, basename } from 'jsr:@std/path@0.224.0';
+import { join } from 'jsr:@std/path@0.224.0';
 import { stringify } from "@std/csv";
-import { fetchRecords as fetchGristRecords } from "https://raw.githubusercontent.com/sherlock-iremus/sherlock-deno/refs/heads/main/common-grist.ts";
-import { addFileRecordsToGrist, addRunRecordToGrist, getRunName } from './utils.ts';
+import { addFileRecordsToGrist, addRunRecordToGrist, getCorrespondingCollectionId, getCorrespondingRunId, getRunName, getScriptDefinition, logScriptEnd, logScriptStart, SCRIPT_TYPE, ScriptDefinition } from './utils.ts';
+import { DAT_FOLDER_PATH, GEN_FOLDER_PATH } from './consts.ts';
 
 const { options } = await new Command()
   .name('SHERLOOK 3.1')
@@ -22,9 +22,18 @@ const { options } = await new Command()
   .option('--albert-collection-id <albert-collection-id:string>', '')
   .parse();
 
-const { repo, prompt, albertCollectionId } = options;
-const { albertBase, albertApiKey } = options;
-const tool = "Albert Extract Structure";
+const { repo, prompt, albertCollectionId, albertBase, albertApiKey, collectionUuid } = options;
+const scriptDefiniton: ScriptDefinition = getScriptDefinition(
+  "Albert Extract Structure With Collection Search Tool",
+  SCRIPT_TYPE.indeterministic,
+  options.runName,
+  GEN_FOLDER_PATH,
+  DAT_FOLDER_PATH
+);
+
+logScriptStart(scriptDefiniton);
+const collectionRecordId = await getCorrespondingCollectionId(options, collectionUuid);
+const existingRunId = await getCorrespondingRunId(options, collectionRecordId, scriptDefiniton.runName);
 
 const res = await fetch(
   `${albertBase}v1/chat/completions`,
@@ -49,7 +58,7 @@ const res = await fetch(
             - Les guillemets présents dans les données doivent être échappés en les doublant (" -> "").
             Rajoute une colonne supplémentaire nommée source_file (dans le texte: "source file: <nom du fichier>") qui correspond au fichier dans lequel se trouve information que tu as relevée.
             Si tu ne trouves pas d'information pour cette colonne, ne renseigne surtout rien.`
-          */ 
+          */
           /* json */ `
            Tu extrais les informations du document et tu retournes UNIQUEMENT un tableau JSON valide.
 
@@ -93,7 +102,7 @@ Contraintes :
           type: "search",
           collection_ids: [albertCollectionId],
           method: "hybrid",
-          limit: 100
+          limit: 3
         }
       ],
       tool_choice: "auto"
@@ -102,8 +111,8 @@ Contraintes :
 );
 
 const data = await res.json();
-
-const outDir = join(repo, '/dat', getRunName(options.runName, tool));
+console.log(data)
+const outDir = join(repo, scriptDefiniton.outputFolder);
 try { await Deno.mkdir(outDir, { recursive: true }); } catch (_) { }
 const response = data.choices[0].message.content;
 await Deno.writeTextFile(join(outDir, 'structure.txt'), response);
@@ -111,28 +120,10 @@ await Deno.writeTextFile(join(outDir, 'structure.json'), JSON.stringify(JSON.par
 await Deno.writeTextFile(join(outDir, 'structure.csv'), stringify(JSON.parse(response), { header: true, columns: Object.keys(JSON.parse(response)[0] || {}) }));
 console.log(`Saved Albert extract structure response to ${outDir}/structure.txt, structure.json, and structure.csv`);
 
-
-// Create a Grist run record linking input files (those matched in Grist) and then record the output file
-const collectionRecords: CollectionRecord[] = await fetchGristRecords(
-  options.gristBase,
-  options.gristApiKey,
-  options.gristDocId,
-  options.gristCollectionTableId
-);
-const existingCollectionId = collectionRecords.find(r => r.fields.UUID === options.collectionUuid)?.id;
-if (!existingCollectionId) {
-  console.error('Could not find collection in Grist with provided UUID');
-  Deno.exit(1);
-}
-
-const runRecordId = await addRunRecordToGrist(options, existingCollectionId, tool, options.runName, [], null, JSON.stringify({
+const runRecordId = await addRunRecordToGrist(options, collectionRecordId, scriptDefiniton.toolName, scriptDefiniton.runName, [], null, JSON.stringify({
   prompt: prompt,
   albertCollectionId: albertCollectionId,
-}));
+}), existingRunId);
 
-if (!runRecordId) {
-  console.error('Could not create run record in Grist');
-  Deno.exit(1);
-}
-
-addFileRecordsToGrist(options, existingCollectionId, runRecordId, "dat", ['structure.txt', 'structure.json', 'structure.csv'].map(f => join(outDir, f)));
+addFileRecordsToGrist(options, collectionRecordId, runRecordId, "dat", ['structure.txt', 'structure.json', 'structure.csv'].map(f => join(outDir, f)));
+logScriptEnd(scriptDefiniton, runRecordId);

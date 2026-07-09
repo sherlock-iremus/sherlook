@@ -1,9 +1,8 @@
 import { Command } from 'jsr:@cliffy/command@1.0.0';
-import { walk } from "jsr:@std/fs@0.224.0";
-import { addFileRecordsToGrist, addRunRecordToGrist, getMD5FromFile, getRunName } from './utils.ts';
+import { addFileRecordsToGrist, addRunRecordToGrist, getCorrespondingCollectionId, getCorrespondingRunId, getFilesMatchingRegex, getGristIdsByMatchedFiles, getMD5FromFile, getRunName, getScriptDefinition, logScriptStart, SCRIPT_TYPE, ScriptDefinition } from './utils.ts';
 import { join, relative } from 'jsr:@std/path@0.224.0';
 import { DB } from 'https://deno.land/x/sqlite/mod.ts';
-import { fetchRecords as fetchGristRecords } from "https://raw.githubusercontent.com/sherlock-iremus/sherlock-deno/refs/heads/main/common-grist.ts";
+import { DAT_FOLDER_PATH, ANA_FOLDER_PATH } from './consts.ts';
 
 const { options } = await new Command()
   .name('SHERLOOK 4.2')
@@ -24,28 +23,22 @@ const { options } = await new Command()
   .parse();
 
 const { repo, prompt, albertBase, albertApiKey, inputFilesRegex, collectionUuid } = options;
-const tool = "Albert SQLite Query";
+
+const scriptDefiniton: ScriptDefinition = getScriptDefinition(
+    "Albert SQLite Query",
+    SCRIPT_TYPE.indeterministic,
+    options.runName,
+    DAT_FOLDER_PATH,
+    ANA_FOLDER_PATH
+);
+
+logScriptStart(scriptDefiniton);
+const collectionRecordId = await getCorrespondingCollectionId(options, collectionUuid);
+const existingRunId = await getCorrespondingRunId(options, collectionRecordId, scriptDefiniton.runName);
 
 console.log('🔍 Step 1: Searching for SQLite files matching regex...');
 
-const regex = new RegExp(inputFilesRegex);
-const matchedDbFiles: string[] = [];
-
-for await (const entry of walk(repo)) {
-  if (!entry.isFile) continue;
-  const relativePath = relative(repo, entry.path);
-  if (regex.test(entry.path) || regex.test(relativePath)) {
-    if (entry.path.endsWith('.sqlite') || entry.path.endsWith('.db')) {
-      matchedDbFiles.push(entry.path);
-      console.log(`  ✓ Found: ${relativePath}`);
-    }
-  }
-}
-
-if (matchedDbFiles.length === 0) {
-  console.error('❌ No SQLite files found matching regex');
-  Deno.exit(1);
-}
+const matchedDbFiles = await getFilesMatchingRegex(repo, inputFilesRegex);
 
 console.log(`\n🔍 Step 2: Analyzing database schema...`);
 
@@ -167,7 +160,7 @@ if (!summaryData.choices || summaryData.choices.length === 0) {
 const finalSummary = summaryData.choices[0].message.content;
 console.log(`\n📝 Final Summary:\n${finalSummary}`);
 
-const outDir = join(repo, '/ana', getRunName(options.runName, tool));
+const outDir = join(repo, scriptDefiniton.outputFolder);
 try { await Deno.mkdir(outDir, { recursive: true }); } catch (_) { /* ignore */ }
 
 const outputLog = `Query: ${generatedSql}\n\nResults (${queryResults.length} rows):\n${JSON.stringify(queryResults, null, 2)}\n\nSummary:\n${finalSummary}`;
@@ -178,51 +171,18 @@ await Deno.writeTextFile(join(outDir, 'results.json'), JSON.stringify(queryResul
 console.log(`\n✅ Step 6: Saving results...`);
 console.log(`  📄 Saved to: ${outDir}`);
 
-const fileRecords: RawRecord[] = await fetchGristRecords(
-  options.gristBase,
-  options.gristApiKey,
-  options.gristDocId,
-  options.gristFilesTableId
-);
-
-const inputFileIds: number[] = [];
-for (const dbPath of matchedDbFiles) {
-  try {
-    const md5 = await getMD5FromFile(dbPath);
-    const matching = fileRecords.find(r => r?.fields?.MD5 === md5);
-    if (matching?.id) inputFileIds.push(matching.id);
-  } catch (e) {
-    console.warn(`Could not hash ${relative(repo, dbPath)}: ${e}`);
-  }
-}
+const inputFileIds = await getGristIdsByMatchedFiles(options, matchedDbFiles);
 
 console.log(`\n🗂️  Step 7: Recording run in Grist...`);
 
-const collectionRecords: CollectionRecord[] = await fetchGristRecords(
-  options.gristBase,
-  options.gristApiKey,
-  options.gristDocId,
-  options.gristCollectionTableId
-);
-const existingCollectionId = collectionRecords.find(r => r.fields.UUID === options.collectionUuid)?.id;
-if (!existingCollectionId) {
-  console.error('❌ Could not find collection in Grist');
-  Deno.exit(1);
-}
-
-const runRecordId = await addRunRecordToGrist(options, existingCollectionId, tool, options.runName, inputFileIds, finalSummary, JSON.stringify({
+const runRecordId = await addRunRecordToGrist(options, collectionRecordId, scriptDefiniton.toolName, scriptDefiniton.runName, inputFileIds, finalSummary, JSON.stringify({
   prompt,
   inputRegex: inputFilesRegex,
   generatedSql,
   rowsReturned: queryResults.length
-}));
+}), existingRunId);
 
-if (!runRecordId) {
-  console.error('❌ Could not create run record in Grist');
-  Deno.exit(1);
-}
-
-await addFileRecordsToGrist(options, existingCollectionId, runRecordId, 'ana', [
+await addFileRecordsToGrist(options, collectionRecordId, runRecordId, 'ana', [
   join(outDir, 'response.txt'),
   join(outDir, 'query.sql'),
   join(outDir, 'results.json')

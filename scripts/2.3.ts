@@ -2,8 +2,8 @@ import { Command } from 'jsr:@cliffy/command@1.0.0';
 import { walk } from "jsr:@std/fs@0.224.0";
 import { join, basename, extname, dirname, relative } from "jsr:@std/path@0.224.0";
 import { GEN_FOLDER_PATH } from './consts.ts';
-import { addRunRecordToGrist, addFileRecordsToGrist, getMD5FromFile } from './utils.ts';
-import { fetchRecords as fetchGristRecords } from "https://raw.githubusercontent.com/sherlock-iremus/sherlock-deno/refs/heads/main/common-grist.ts";
+import { addRunRecordToGrist, addFileRecordsToGrist, getMD5FromFile, getScriptDefinition, SCRIPT_TYPE, ScriptDefinition, logScriptStart, getCorrespondingCollectionId, getCorrespondingRunId, logScriptEnd } from './utils.ts';
+import { fetchRecords as fetchGristRecords } from "https://gitlab.huma-num.fr/sherlock/sherlock-deno/-/raw/main/common-grist.ts";
 
 // Use pdf-parse-deno for text extraction
 import pdfParse from "npm:pdf-parse-deno@1.1.1";
@@ -13,7 +13,7 @@ const { options } = await new Command()
   .description("Extract text from single-page PDFs in the /gen folder and log a run in Grist.")
   .version('v1.0.0')
   .option('--repo <repo:string>', "")
-  .option("--input-file <input-file:string>", "input PDF file path", {collect: true})
+  .option("--input-file <input-file:string>", "input PDF file path", { collect: true })
   .option("--collection-uuid <collection-uuid:string>", "")
   .option("--grist-api-key <grist-api-key:string>", "")
   .option("--grist-base <grist-base:string>", "")
@@ -25,23 +25,21 @@ const { options } = await new Command()
   .option("--put-file-name-in-txt", "Prepend relative file path (from repo) at start of generated txt files")
   .parse();
 
-const TOOL_NAME = "PDF to TXT";
 const { repo, collectionUuid, putFileNameInTxt } = options;
 
-console.log("Fetching collections definitions from Grist... ⏳");
-const collectionRecords: CollectionRecord[] = await fetchGristRecords(
-  options.gristBase,
-  options.gristApiKey,
-  options.gristDocId,
-  options.gristCollectionTableId
+const scriptDefiniton: ScriptDefinition = getScriptDefinition(
+  "PDF to TXT",
+  SCRIPT_TYPE.determinist,
+  options.runName,
+  GEN_FOLDER_PATH,
+  GEN_FOLDER_PATH
 );
 
-const existingCollectionId = collectionRecords.find(r => r.fields.UUID === collectionUuid)?.id;
-if (!existingCollectionId) {
-  throw console.error(`No existing collection found in Grist with UUID ${collectionUuid}. Please create the collection in Grist first and re-run the script.`);
-}
+logScriptStart(scriptDefiniton);
 
-// Discover input PDFs from Grist: select Files where Dir === 'gen' and Pages === 1
+const collectionRecordId = await getCorrespondingCollectionId(options, collectionUuid);
+const existingRunId = await getCorrespondingRunId(options, collectionRecordId, scriptDefiniton.runName);
+
 console.log("Fetching Files table records from Grist... ⏳");
 const rawFileRecords: RawRecord[] = await fetchGristRecords(
   options.gristBase,
@@ -50,6 +48,7 @@ const rawFileRecords: RawRecord[] = await fetchGristRecords(
   options.gristFilesTableId
 );
 
+// Discover input PDFs from Grist: select Files where Dir === 'gen' and Pages === 1
 const candidateRecords = (rawFileRecords || []).filter(r => {
   if (!r || !r.fields) return false;
   const dir = r.fields.Dir;
@@ -67,7 +66,7 @@ if (candidateMd5Set.size === 0) {
 // Walk local gen folder and match files by MD5 to the candidate records
 const genPdfPaths: string[] = [];
 const matchedGristIdSet = new Set<number>();
-for await (const entry of walk(repo + GEN_FOLDER_PATH, { maxDepth: 1 })) {
+for await (const entry of walk(repo + scriptDefiniton.inputFolder, { maxDepth: 1 })) {
   if (!entry.isFile) continue;
   if (extname(entry.path).toLowerCase() !== ".pdf") continue;
   try {
@@ -91,13 +90,7 @@ if (genPdfPaths.length === 0) {
 
 const inputPdfGristIds: number[] = Array.from(matchedGristIdSet);
 
-// Create a run record in Grist and link to input PDFs
-const runRecordId = await addRunRecordToGrist(options, existingCollectionId, TOOL_NAME, options.runName, inputPdfGristIds);
-if (!runRecordId) {
-  console.error("Could not log run in Grist. Exiting.");
-  Deno.exit(1);
-}
-console.log(`Run record created in Grist with ID: ${runRecordId}`);
+const runRecordId = await addRunRecordToGrist(options, collectionRecordId, scriptDefiniton.toolName, scriptDefiniton.runName, inputPdfGristIds, null, null, existingRunId);
 
 // Extract text from each PDF using pdf-parse-deno
 async function extractTextFromPdf(path: string): Promise<string> {
@@ -128,5 +121,6 @@ for (const p of genPdfPaths) {
   }
 }
 
-// Add text file records to Grist (uses the same helper that adds file records). Use folder key 'gen'.
-addFileRecordsToGrist(options, existingCollectionId, runRecordId, "gen", extractedFiles);
+addFileRecordsToGrist(options, collectionRecordId, runRecordId, "gen", extractedFiles);
+
+logScriptEnd(scriptDefiniton, runRecordId)
