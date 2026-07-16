@@ -1,9 +1,9 @@
 #!/bin/bash
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
 
-if [ $# -lt 4 ]; then
-    echo "Usage: $0 <collection-uuid> <repo-path> <input-files-regex> <prompt> [run-name]"
-    echo "Example: bash $0 df037d10-9c54-4c7f-a67a-f86b8a6c485a ../sherlook-example-collection '.*/dat/.*\.json$' 'Quel pokemon de type psy est le plus grand ?'"
+if [ $# -lt 5 ]; then
+    echo "Usage: $0 <collection-uuid> <repo-path> <input-files-regex> <prompt> <run-name>"
+    echo "Example: bash $0 df037d10-9c54-4c7f-a67a-f86b8a6c485a ../sherlook-example-collection '.*/dat/.*\.json$' 'Quel pokemon de type psy est le plus grand ?' myrun"
     exit 1
 fi
 
@@ -16,11 +16,11 @@ RUN_NAME="$5"
 source "$SCRIPT_DIR/get-env.sh"
 load_env
 
-if [ -n "$RUN_NAME" ]; then
-    RUN_NAME_ARG=(--run-name "$RUN_NAME")
-else
-    RUN_NAME_ARG=()
+if [ -z "$RUN_NAME" ]; then
+    echo "Missing required run-name"
+    exit 1
 fi
+RUN_NAME_ARG=(--run-name "$RUN_NAME")
 
 deno --allow-env --allow-net --allow-read --allow-write --unsafely-ignore-certificate-errors \
     "$SCRIPT_DIR/4.1.ts" \

@@ -7,6 +7,7 @@
     "jsr:@cliffy/table@1.0.0": "1.0.0",
     "jsr:@std/assert@0.224": "0.224.0",
     "jsr:@std/csv@^1.0.6": "1.0.6",
+    "jsr:@std/encoding@0.224.0": "0.224.0",
     "jsr:@std/fmt@^1.0.9": "1.0.10",
     "jsr:@std/fs@0.224.0": "0.224.0",
     "jsr:@std/path@0.224": "0.224.0",
@@ -51,6 +52,9 @@
       "dependencies": [
         "jsr:@std/streams"
       ]
+    },
+    "@std/encoding@0.224.0": {
+      "integrity": "efb6dca97d3e9c31392bd5c8cfd9f9fc9decf5a1f4d1f78af7900a493bcf89b5"
     },
     "@std/fmt@1.0.10": {
       "integrity": "90dfba288802ac6de82fb31d0917eb9e4450b9925b954d5e51fc29ac07419db5"
@@ -122,6 +126,8 @@
     "https://deno.land/std@0.224.0/csv/mod.ts": "289ecf79b3609f63dfc1d39a7c791f8f14b73b29fb65bbb6b3e3e2bd0cddc75d",
     "https://deno.land/std@0.224.0/csv/parse.ts": "e2d5e82e19b71a968f5fcd3b76b438ee6f646fe8e948c4c2d3b00ad9cd0a659a",
     "https://deno.land/std@0.224.0/csv/stringify.ts": "9e0badcbc32fc63ee089d2dfbc5721650d5766ef0a554f07243ab8f03f7c3127",
+    "https://deno.land/std@0.224.0/encoding/_util.ts": "beacef316c1255da9bc8e95afb1fa56ed69baef919c88dc06ae6cb7a6103d376",
+    "https://deno.land/std@0.224.0/encoding/base64.ts": "dd59695391584c8ffc5a296ba82bcdba6dd8a84d41a6a539fbee8e5075286eaf",
     "https://deno.land/std@0.224.0/streams/_common.ts": "948735ef6d140cd6916dca861197b88fc57db52c2f923c392b7a14033d8fed4b",
     "https://deno.land/std@0.224.0/streams/text_delimiter_stream.ts": "94dfc900204e306496c1b58c80473db57b6097afdcb8ea9eaff453a193a659f1",
     "https://deno.land/x/sqlite@v3.9.1/build/sqlite.js": "2afc7875c7b9c85d89730c4a311ab3a304e5d1bf761fbadd8c07bbdf130f5f9b",

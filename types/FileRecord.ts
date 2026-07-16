@@ -1,4 +1,4 @@
-interface RawRecord {
+interface FileRecord {
   id: number;
   fields: {
     Collection: string;

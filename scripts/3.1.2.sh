@@ -2,7 +2,7 @@
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
 
 if [ $# -lt 5 ]; then
-    echo "Usage: $0 <collection-uuid> <repo-path> <input-regex> <collection-id> [run-name]"
+    echo "Usage: $0 <collection-uuid> <repo-path> <input-regex> <collection-id> <run-name>"
     echo "Example: bash scripts/3.1.2.sh e99012b1-51be-4f2b-8105-9deec5d474f4 ../sherlook-example-collection 'A partir des textes que tu as trouvé, génère moi un csv avec les colonnes suivantes : \n\nnuméro du pokemon \npath du fichier dans lequel tu as trouvé ce pokemon \nheight\nweight\ntype\ndescription\n\n' 237718 structure"
     exit 1
 fi

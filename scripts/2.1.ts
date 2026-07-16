@@ -1,15 +1,29 @@
-import { Command } from 'jsr:@cliffy/command@1.0.0';
+import { Command } from "jsr:@cliffy/command@1.0.0";
 import { PDFDocument } from "https://esm.sh/pdf-lib";
 import { walk } from "jsr:@std/fs@0.224.0";
-import { join, basename, extname } from "jsr:@std/path@0.224.0";
-import { RAW_FOLDER_PATH, GEN_FOLDER_PATH } from './consts.ts';
-import { addFileRecordsToGrist, addRunRecordToGrist, getCorrespondingCollectionId, getCorrespondingRunId, getIdsByMD5FromGrist, getMD5FromFile, getScriptDefinition, logScriptEnd, logScriptStart, SCRIPT_TYPE, ScriptDefinition } from './utils.ts';
+import { basename, extname, join } from "jsr:@std/path@0.224.0";
+import { GEN_FOLDER_PATH, RAW_FOLDER_PATH } from "./consts.ts";
+import {
+  addFileRecordsToGrist,
+  addRunRecordToGrist,
+  getCorrespondingCollectionId,
+  getCorrespondingRunId,
+  getIdsByMD5FromGrist,
+  getMD5FromFile,
+  getScriptDefinition,
+  logScriptEnd,
+  logScriptStart,
+  SCRIPT_TYPE,
+  ScriptDefinition,
+} from "./utils.ts";
 
 const { options } = await new Command()
   .name("SHERLOOK Split PDFs")
-  .description("Découpe les PDF en pages uniques, recense les fichiers générés dans /gen et enregistre un run dans Grist.")
-  .version('v1.0.0')
-  .option('--repo <repo:string>', "")
+  .description(
+    "Découpe les PDF en pages uniques, recense les fichiers générés dans /gen et enregistre un run dans Grist.",
+  )
+  .version("v1.0.0")
+  .option("--repo <repo:string>", "")
   .option("--collection-uuid <collection-uuid:string>", "")
   .option("--grist-api-key <grist-api-key:string>", "")
   .option("--grist-base <grist-base:string>", "")
@@ -17,28 +31,46 @@ const { options } = await new Command()
   .option("--grist-files-table-id <grist-files-table-id:string>", "")
   .option("--grist-run-table-id <grist-run-table-id:string>", "")
   .option("--grist-collection-table-id <grist-collection-table-id:string>", "")
-  .option("--run-name <run-name:string>", "Optional run name to override generated name")
+  .option("--run-name <run-name:string>", "Run name (required)")
   .parse();
 
-  const { repo, collectionUuid } = options;
-  
-  const scriptDefiniton: ScriptDefinition = getScriptDefinition(
-      "PDF Split",
-      SCRIPT_TYPE.determinist,
-      options.runName,
-      RAW_FOLDER_PATH,
-      GEN_FOLDER_PATH
-  );
+if (!options.runName) {
+  console.error("Missing required --run-name");
+  Deno.exit(1);
+}
+
+const { repo, collectionUuid } = options;
+
+const scriptDefiniton: ScriptDefinition = getScriptDefinition(
+  "PDF Split",
+  SCRIPT_TYPE.determinist,
+  options.runName,
+  RAW_FOLDER_PATH,
+  GEN_FOLDER_PATH,
+);
 
 logScriptStart(scriptDefiniton);
 
-const collectionRecordId = await getCorrespondingCollectionId(options, collectionUuid);
-const existingRunId = await getCorrespondingRunId(options, collectionRecordId, scriptDefiniton.runName);
+const collectionRecordId = await getCorrespondingCollectionId(
+  options,
+  collectionUuid,
+);
+const existingRunId = await getCorrespondingRunId(
+  options,
+  collectionRecordId,
+  scriptDefiniton.runName,
+);
 
 const rawMd5Set = new Set<string>();
 const generatedFiles: any[] = [];
-try { await Deno.mkdir(join(repo, scriptDefiniton.outputFolder), { recursive: true }); } catch (_) { }
-for await (const entry of walk(join(repo, scriptDefiniton.inputFolder), { maxDepth: 1 })) {
+try {
+  await Deno.mkdir(join(repo, scriptDefiniton.outputFolder), {
+    recursive: true,
+  });
+} catch (_) {}
+for await (
+  const entry of walk(join(repo, scriptDefiniton.inputFolder), { maxDepth: 1 })
+) {
   if (!entry.isFile) continue;
   if (extname(entry.path).toLowerCase() !== ".pdf") continue;
 
@@ -53,7 +85,9 @@ for await (const entry of walk(join(repo, scriptDefiniton.inputFolder), { maxDep
     const [page] = await newPdf.copyPages(inputPdf, [i]);
     newPdf.addPage(page);
     const pdfBytes = await newPdf.save();
-    const outName = `${base}-${String(i + 1).padStart(String(pageCount).length, "0")}.pdf`;
+    const outName = `${base}-${
+      String(i + 1).padStart(String(pageCount).length, "0")
+    }.pdf`;
     const outPath = join(repo, scriptDefiniton.outputFolder, outName);
     await Deno.writeFile(outPath, pdfBytes);
     console.log(`Wrote ${outName}`);
@@ -61,9 +95,27 @@ for await (const entry of walk(join(repo, scriptDefiniton.inputFolder), { maxDep
   }
 }
 
-const rawFilesGristIds: number[] = await getIdsByMD5FromGrist(options, rawMd5Set);
+const rawFilesGristIds: number[] = await getIdsByMD5FromGrist(
+  options,
+  rawMd5Set,
+);
 
-const runRecordId = await addRunRecordToGrist(options, collectionRecordId, scriptDefiniton.toolName, scriptDefiniton.runName, rawFilesGristIds, null, null, existingRunId);
-await addFileRecordsToGrist(options, collectionRecordId, runRecordId, "gen", generatedFiles)
+const runRecordId = await addRunRecordToGrist(
+  options,
+  collectionRecordId,
+  scriptDefiniton.toolName,
+  scriptDefiniton.runName,
+  rawFilesGristIds,
+  null,
+  null,
+  existingRunId,
+);
+await addFileRecordsToGrist(
+  options,
+  collectionRecordId,
+  runRecordId,
+  "gen",
+  generatedFiles,
+);
 
 logScriptEnd(scriptDefiniton, runRecordId);

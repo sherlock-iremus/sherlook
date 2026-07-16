@@ -1,16 +1,17 @@
 #!/bin/bash
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
 
-if [ $# -lt 2 ]; then
-    echo "Usage: $0 <collection-uuid> <repo-path> [--run-name <name>] [--put-file-name-in-txt]"
-    echo "Example: bash $0 4f9b4989-8567-4337-8d88-f576419726c4 ../sherlook-example-collection --put-file-name-in-txt"
+if [ $# -lt 4 ]; then
+    echo "Usage: $0 <collection-uuid> <repo-path> <input-regex> <run-name> [--put-file-name-in-txt]"
+    echo "Example: bash $0 4f9b4989-8567-4337-8d88-f576419726c4 ../sherlook-example-collection '.*/gen/[^/]+\.pdf$' myrun --put-file-name-in-txt"
     exit 1
 fi
 
-# Positional/flag parsing
-COLLECTION_UUID=""
-REPO_PATH=""
-RUN_NAME=""
+COLLECTION_UUID="$1"
+REPO_PATH="$2"
+INPUT_REGEX="$3"
+RUN_NAME="$4"
+shift 4
 PUT_FILE_NAME_IN_TXT=false
 
 while [[ $# -gt 0 ]]; do
@@ -19,47 +20,34 @@ while [[ $# -gt 0 ]]; do
             PUT_FILE_NAME_IN_TXT=true
             shift
             ;;
-        --run-name)
-            RUN_NAME="$2"
-            shift 2
-            ;;
         --*)
             echo "Unknown option: $1"
             exit 1
             ;;
-        *)
-            if [ -z "$COLLECTION_UUID" ]; then
-                COLLECTION_UUID="$1"
-            elif [ -z "$REPO_PATH" ]; then
-                REPO_PATH="$1"
-            else
-                echo "Too many positional arguments: $1"
-                exit 1
-            fi
-            shift
-            ;;
     esac
 done
 
-if [ -z "$COLLECTION_UUID" ] || [ -z "$REPO_PATH" ]; then
+if [ -z "$COLLECTION_UUID" ] || [ -z "$REPO_PATH" ] || [ -z "$INPUT_REGEX" ] || [ -z "$RUN_NAME" ]; then
     echo "Missing required arguments."
-    echo "Usage: $0 <collection-uuid> <repo-path> [--run-name <name>] [--put-file-name-in-txt]"
+    echo "Usage: $0 <collection-uuid> <repo-path> <input-regex> <run-name> [--put-file-name-in-txt]"
     exit 1
 fi
 
 source "$SCRIPT_DIR/get-env.sh"
 load_env
 
-if [ -n "$RUN_NAME" ]; then
-    RUN_NAME_ARG=(--run-name "$RUN_NAME")
-else
-    RUN_NAME_ARG=()
-fi
+RUN_NAME_ARG=(--run-name "$RUN_NAME")
 
 if [ "$PUT_FILE_NAME_IN_TXT" = true ]; then
     PUT_FLAG=(--put-file-name-in-txt)
 else
     PUT_FLAG=()
+fi
+
+if [ -n "$INPUT_REGEX" ]; then
+    INPUT_REGEX_ARG=(--input-regex "$INPUT_REGEX")
+else
+    INPUT_REGEX_ARG=()
 fi
 
 deno --allow-env --allow-net --allow-read --allow-write --unsafely-ignore-certificate-errors \
@@ -72,6 +60,7 @@ deno --allow-env --allow-net --allow-read --allow-write --unsafely-ignore-certif
         --grist-run-table-id Runs \
         "${RUN_NAME_ARG[@]}" \
         "${PUT_FLAG[@]}" \
+        "${INPUT_REGEX_ARG[@]}" \
         --collection-uuid "$COLLECTION_UUID" \
         --repo "$REPO_PATH"
 

@@ -1,9 +1,9 @@
 #!/bin/bash
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
 
-if [ $# -lt 3 ]; then
-    echo "Usage: $0 <collection-uuid> <repo-path> <input-csv-regex> [run-name]"
-    echo "Example: bash scripts/3.1.4.sh e99012b1-51be-4c7f-a67a-f86b8a6c485a ../sherlook-example-collection '.*/dat/Albert Extract Structure from Files-2026-07-08T08-47-31-201Z/structure\.csv$'"
+if [ $# -lt 4 ]; then
+    echo "Usage: $0 <collection-uuid> <repo-path> <input-csv-regex> <run-name>"
+    echo "Example: bash scripts/3.1.4.sh e99012b1-51be-4c7f-a67a-f86b8a6c485a ../sherlook-example-collection '.*/dat/Albert Extract Structure from Files-2026-07-08T08-47-31-201Z/structure\.csv$' myrun"
     exit 1
 fi
 
@@ -15,11 +15,11 @@ RUN_NAME="$4"
 source "$SCRIPT_DIR/get-env.sh"
 load_env
 
-if [ -n "$RUN_NAME" ]; then
-    RUN_NAME_ARG=(--run-name "$RUN_NAME")
-else
-    RUN_NAME_ARG=()
+if [ -z "$RUN_NAME" ]; then
+    echo "Missing required run-name"
+    exit 1
 fi
+RUN_NAME_ARG=(--run-name "$RUN_NAME")
 
 deno --allow-env --allow-read --allow-write --allow-net --unsafely-ignore-certificate-errors \
     "$SCRIPT_DIR/3.1.4.ts" \

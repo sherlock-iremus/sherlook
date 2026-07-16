@@ -1,8 +1,8 @@
 #!/bin/bash
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
 
-if [ $# -lt 3 ]; then
-    echo "Usage: $0 <collection-uuid> <repo-path> <input-regex> [run-name]"
+if [ $# -lt 4 ]; then
+    echo "Usage: $0 <collection-uuid> <repo-path> <input-regex> <run-name>"
     echo "Example: bash scripts/3.1.1.sh e99012b1-51be-4f2b-8105-9deec5d474f4 ../sherlook-example-collection '.*/gen/[^/]+\.txt$' structure"
     exit 1
 fi
@@ -15,12 +15,11 @@ RUN_NAME="$4"
 source "$SCRIPT_DIR/get-env.sh"
 load_env
 
-
-if [ -n "$RUN_NAME" ]; then
-    RUN_NAME_ARG=(--run-name "$RUN_NAME")
-else
-    RUN_NAME_ARG=()
+if [ -z "$RUN_NAME" ]; then
+    echo "Missing required run-name"
+    exit 1
 fi
+RUN_NAME_ARG=(--run-name "$RUN_NAME")
 
 deno --allow-env --allow-net --allow-read --allow-write --unsafely-ignore-certificate-errors \
     "$SCRIPT_DIR/3.1.1.ts" \
