@@ -1,0 +1,343 @@
+{
+  status: "complete",
+  result_url: null,
+  expires_in: null,
+  pages: [
+    {
+      text_lines: [
+        {
+          polygon: [Array],
+          confidence: 0.7716280817985535,
+          text: "-98-",
+          chars: [Array],
+          original_text_good: false,
+          words: [],
+          bbox: [Array]
+        },
+        {
+          polygon: [Array],
+          confidence: 0.9778351306915283,
+          text: "1903",
+          chars: [Array],
+          original_text_good: false,
+          words: [],
+          bbox: [Array]
+        },
+        {
+          polygon: [Array],
+          confidence: 0.9707493277696463,
+          text: "Mars(suite)",
+          chars: [Array],
+          original_text_good: false,
+          words: [],
+          bbox: [Array]
+        },
+        {
+          polygon: [Array],
+          confidence: 0.9906133252221185,
+          text: "10. Mardi. Recopié lettre à Suzanne Pierrard. A midi reçu lettre d'elle.",
+          chars: [Array],
+          original_text_good: false,
+          words: [],
+          bbox: [Array]
+        },
+        {
+          polygon: [Array],
+          confidence: 0.997642586628596,
+          text: "Répondu à cette lettre. O. Charles à déjeûner.",
+          chars: [Array],
+          original_text_good: false,
+          words: [],
+          bbox: [Array]
+        },
+        {
+          polygon: [Array],
+          confidence: 0.9980970106341622,
+          text: `A 1h. chez Mme Pierrard, jusqu"à 2h. A pied à l'Arc de Triomphe.`,
+          chars: [Array],
+          original_text_good: false,
+          words: [],
+          bbox: [Array]
+        },
+        {
+          polygon: [Array],
+          confidence: 0.9950546233021483,
+          text: "A la maison. - Ecrit lettre à Suzanne Pierrard.",
+          chars: [Array],
+          original_text_good: false,
+          words: [],
+          bbox: [Array]
+        },
+        {
+          polygon: [Array],
+          confidence: 0.9954147102340819,
+          text: "Le soir chez les Pierrard. - Les Béatitudes, le prélude et la",
+          chars: [Array],
+          original_text_good: false,
+          words: [],
+          bbox: [Array]
+        },
+        {
+          polygon: [Array],
+          confidence: 0.8624543582017605,
+          text: "8ème; Mmeet Mlle Duboc. Ecrit fragments de lettre.",
+          chars: [Array],
+          original_text_good: false,
+          words: [],
+          bbox: [Array]
+        },
+        {
+          polygon: [Array],
+          confidence: 0.9927023263966165,
+          text: "11. Mercredi. Ecrit à Suzanne Pierrard. Déjeûné chez Halphen (Cortot, Litvinne&)",
+          chars: [Array],
+          original_text_good: false,
+          words: [],
+          bbox: [Array]
+        },
+        {
+          polygon: [Array],
+          confidence: 0.960646888271707,
+          text: "A 4h.1/2 à la maison - thé. - Ecrit. Le soir chez les Duboc",
+          chars: [Array],
+          original_text_good: false,
+          words: [],
+          bbox: [Array]
+        },
+        {
+          polygon: [Array],
+          confidence: 0.9982431861070487,
+          text: "(fragments du Requiem de Mozart; Tristan et Yseult, Mlle Duboc.",
+          chars: [Array],
+          original_text_good: false,
+          words: [],
+          bbox: [Array]
+        },
+        {
+          polygon: [Array],
+          confidence: 0.9925680626183748,
+          text: "lettre de Suzanne Pierrard, Réaccompagné Mme et Suz. Pierrard.",
+          chars: [Array],
+          original_text_good: false,
+          words: [],
+          bbox: [Array]
+        },
+        {
+          polygon: [Array],
+          confidence: 0.9855459200011359,
+          text: "Ecrit à Suzanne Pierrard.",
+          chars: [Array],
+          original_text_good: false,
+          words: [],
+          bbox: [Array]
+        },
+        {
+          polygon: [Array],
+          confidence: 0.9875236404569525,
+          text: "Ecrit à Suzanne P. - Porté un mot à Marie Croquevielle.",
+          chars: [Array],
+          original_text_good: false,
+          words: [],
+          bbox: [Array]
+        },
+        {
+          polygon: [Array],
+          confidence: 0.9868571758270264,
+          text: "12. Jeudi.",
+          chars: [Array],
+          original_text_good: false,
+          words: [],
+          bbox: [Array]
+        },
+        {
+          polygon: [Array],
+          confidence: 0.9791307144048738,
+          text: "A 11h.1/2 chez Mme Pierrard, Suzanne P.",
+          chars: [Array],
+          original_text_good: false,
+          words: [],
+          bbox: [Array]
+        },
+        {
+          polygon: [Array],
+          confidence: 0.9995935559272766,
+          text: "Tiré photographies porte feuille japonais. Ecrit à Suzanne.",
+          chars: [Array],
+          original_text_good: false,
+          words: [],
+          bbox: [Array]
+        },
+        {
+          polygon: [Array],
+          confidence: 0.994783472097837,
+          text: "A 2h. Marie Croquevielle à la maison, tennis avec Marie Croque-",
+          chars: [Array],
+          original_text_good: false,
+          words: [],
+          bbox: [Array]
+        },
+        {
+          polygon: [Array],
+          confidence: 0.9979422611574973,
+          text: "vielle, René Pradest et Mr X.",
+          chars: [Array],
+          original_text_good: false,
+          words: [],
+          bbox: [Array]
+        },
+        {
+          polygon: [Array],
+          confidence: 0.9958934801997561,
+          text: "A 6h. écrit à Suzanne Pierrard.",
+          chars: [Array],
+          original_text_good: false,
+          words: [],
+          bbox: [Array]
+        },
+        {
+          polygon: [Array],
+          confidence: 0.9673487432797749,
+          text: "13. Vendredi. Ecrit à Suzanne Pierrard. Chez Wetzel. A 3h.1/2 au cours de",
+          chars: [Array],
+          original_text_good: false,
+          words: [],
+          bbox: [Array]
+        },
+        {
+          polygon: [Array],
+          confidence: 0.9993898489258506,
+          text: "Blanche, Suzanne P., puis Mme P. chez la teinturière.",
+          chars: [Array],
+          original_text_good: false,
+          words: [],
+          bbox: [Array]
+        },
+        {
+          polygon: [Array],
+          confidence: 0.9986572237241835,
+          text: "Au thé rue de l'Echelle. Chez Mme Duglé (nouvelles de Suzanne",
+          chars: [Array],
+          original_text_good: false,
+          words: [],
+          bbox: [Array]
+        },
+        {
+          polygon: [Array],
+          confidence: 0.9904684597446073,
+          text: "Duglé). Chez Mme Vital; revenu avec Mme Pierrard et Suzanne.",
+          chars: [Array],
+          original_text_good: false,
+          words: [],
+          bbox: [Array]
+        },
+        {
+          polygon: [Array],
+          confidence: 0.9982981312842596,
+          text: "Le soir Mme Pierrard, et Mlles Suzanne Pierrard et Duboc à la",
+          chars: [Array],
+          original_text_good: false,
+          words: [],
+          bbox: [Array]
+        },
+        {
+          polygon: [Array],
+          confidence: 0.9991254100432763,
+          text: "maison (Bach: Passion selon St Jean; adagios de Beethoven; pré-",
+          chars: [Array],
+          original_text_good: false,
+          words: [],
+          bbox: [Array]
+        },
+        {
+          polygon: [Array],
+          confidence: 0.840804708274928,
+          text: "lude de Tristan et Yseult; mort d'Yseult.)",
+          chars: [Array],
+          original_text_good: false,
+          words: [],
+          bbox: [Array]
+        },
+        {
+          polygon: [Array],
+          confidence: 0.9925426829744268,
+          text: "(Accompagné Mme Pierrard et Suzanne; (clair de lune)",
+          chars: [Array],
+          original_text_good: false,
+          words: [],
+          bbox: [Array]
+        },
+        {
+          polygon: [Array],
+          confidence: 0.993903356439927,
+          text: "A 11h. écrit à Suzanne Pierrard.",
+          chars: [Array],
+          original_text_good: false,
+          words: [],
+          bbox: [Array]
+        },
+        {
+          polygon: [Array],
+          confidence: 0.9852560559908549,
+          text: "14. Samedi. A 8h.1/2 à pied rue Mozart et rue de Passy, vu Suzanne P. rue",
+          chars: [Array],
+          original_text_good: false,
+          words: [],
+          bbox: [Array]
+        },
+        {
+          polygon: [Array],
+          confidence: 0.9995928626311453,
+          text: "Franklin. Acheté papier à lettres au Magasin du Louvre.",
+          chars: [Array],
+          original_text_good: false,
+          words: [],
+          bbox: [Array]
+        },
+        {
+          polygon: [Array],
+          confidence: 0.9885185522337755,
+          text: "A 11h. lettre de Suzanne P. - Ecrit à Suzanne.",
+          chars: [Array],
+          original_text_good: false,
+          words: [],
+          bbox: [Array]
+        },
+        {
+          polygon: [Array],
+          confidence: 0.9853302164683266,
+          text: "Viré photographies. A 3h.1/2 Suzanne et Mme Pierrard, réponse",
+          chars: [Array],
+          original_text_good: false,
+          words: [],
+          bbox: [Array]
+        },
+        {
+          polygon: [Array],
+          confidence: 0.9897619809134531,
+          text: "définitive; chez Mme P.; - thé; rue St Lazare pour voyage",
+          chars: [Array],
+          original_text_good: false,
+          words: [],
+          bbox: [Array]
+        },
+        {
+          polygon: [Array],
+          confidence: 0.99125940665122,
+          text: "circulaire; dîné chez Mme Herscher. 11h.1/2 Ecrit à Suzanne.",
+          chars: [Array],
+          original_text_good: false,
+          words: [],
+          bbox: [Array]
+        }
+      ],
+      image_bbox: [ 0, 0, 1296, 1808 ],
+      page: 1
+    }
+  ],
+  success: true,
+  error: null,
+  page_count: 1,
+  total_cost: 1,
+  cost_breakdown: { list_cost_cents: 1, final_cost_cents: 1, regional_multiplier: 1 },
+  versions: {}
+}
